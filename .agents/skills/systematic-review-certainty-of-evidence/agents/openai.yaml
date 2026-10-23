@@ -1,0 +1,4 @@
+interface:
+  display_name: "SR Certainty of Evidence"
+  short_description: "Assess outcome-level certainty when applicable."
+  default_prompt: "Use $systematic-review-certainty-of-evidence to assess certainty for applicable review modules."

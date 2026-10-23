@@ -1,0 +1,4 @@
+interface:
+  display_name: "Systematic Review"
+  short_description: "Run a coherent AI-first systematic review."
+  default_prompt: "Use $systematic-review to start or continue this systematic review with risk-based evidence and milestone approvals."

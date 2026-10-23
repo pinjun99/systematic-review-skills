@@ -1,0 +1,4 @@
+interface:
+  display_name: "SR Title Abstract Screening"
+  short_description: "Screen citations conservatively with AI."
+  default_prompt: "Use $systematic-review-title-abstract-screening to screen titles and abstracts with risk-based evidence."

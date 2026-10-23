@@ -1,0 +1,17 @@
+[
+  {"case_id":"CI-01","module":"clinical_intervention","scenario":"straightforward","decision":"include","evidence_required":false,"critical_fields":{"sample_size":120},"expert_judgments":{"synthesis":"meta_analysis_eligible"}},
+  {"case_id":"CI-02","module":"clinical_intervention","scenario":"ambiguous","decision":"uncertain","evidence_required":true,"critical_fields":{},"expert_judgments":{}},
+  {"case_id":"CI-03","module":"clinical_intervention","scenario":"multi_report","decision":"include","evidence_required":false,"critical_fields":{"reports":2},"expert_judgments":{}},
+  {"case_id":"OA-01","module":"observational_association","scenario":"straightforward","decision":"exclude","primary_reason_code":"WRONG_POPULATION","evidence_required":true,"critical_fields":{},"expert_judgments":{}},
+  {"case_id":"OA-02","module":"observational_association","scenario":"conflicting","decision":"uncertain","evidence_required":true,"critical_fields":{},"expert_judgments":{}},
+  {"case_id":"OA-03","module":"observational_association","scenario":"missing_information","decision":"uncertain","evidence_required":true,"critical_fields":{},"expert_judgments":{}},
+  {"case_id":"AI-01","module":"ai_diagnostic_prediction","scenario":"straightforward","decision":"include","evidence_required":false,"critical_fields":{"auroc":0.87},"expert_judgments":{"appraisal":"high_risk"}},
+  {"case_id":"AI-02","module":"ai_diagnostic_prediction","scenario":"poor_text_extraction","decision":"uncertain","evidence_required":true,"critical_fields":{},"expert_judgments":{}},
+  {"case_id":"AI-03","module":"ai_diagnostic_prediction","scenario":"conflicting","decision":"exclude","primary_reason_code":"NO_ELIGIBLE_EVALUATION","evidence_required":true,"critical_fields":{},"expert_judgments":{}},
+  {"case_id":"OB-01","module":"preclinical_organ_bath","scenario":"straightforward","decision":"include","evidence_required":false,"critical_fields":{"concentration_unit":"µM"},"expert_judgments":{"synthesis":"structured_only"}},
+  {"case_id":"OB-02","module":"preclinical_organ_bath","scenario":"missing_information","decision":"uncertain","evidence_required":true,"critical_fields":{},"expert_judgments":{}},
+  {"case_id":"OB-03","module":"preclinical_organ_bath","scenario":"multi_report","decision":"exclude","primary_reason_code":"WRONG_EXPERIMENTAL_MODEL","evidence_required":true,"critical_fields":{},"expert_judgments":{}},
+  {"case_id":"SC-01","module":"scoping_evidence_mapping","scenario":"straightforward","decision":"include","evidence_required":false,"critical_fields":{"concept_count":3},"expert_judgments":{}},
+  {"case_id":"SC-02","module":"scoping_evidence_mapping","scenario":"poor_text_extraction","decision":"uncertain","evidence_required":true,"critical_fields":{},"expert_judgments":{}},
+  {"case_id":"SC-03","module":"scoping_evidence_mapping","scenario":"ambiguous","decision":"exclude","primary_reason_code":"WRONG_CONCEPT","evidence_required":true,"critical_fields":{},"expert_judgments":{}}
+]

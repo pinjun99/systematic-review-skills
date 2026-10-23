@@ -1,0 +1,4 @@
+interface:
+  display_name: "SR Synthesis Planning"
+  short_description: "Confirm prespecified synthesis decisions."
+  default_prompt: "Use $systematic-review-synthesis-planning to confirm or amend the protocol synthesis plan against the evidence."

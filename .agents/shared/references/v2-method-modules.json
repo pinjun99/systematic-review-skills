@@ -1,0 +1,40 @@
+{
+  "schema_version": "2.0",
+  "modules": {
+    "clinical_intervention": {
+      "eligibility_fields": ["population", "intervention", "comparator", "outcomes", "timing", "setting", "study_design"],
+      "critical_extraction_fields": ["sample_size", "intervention", "comparator", "outcome_definition", "time_point", "effect_estimate", "uncertainty"],
+      "risk_of_bias": "REQUIRED_WHEN_RESULTS_ARE_SYNTHESIZED",
+      "certainty": "REQUIRED_FOR_IMPORTANT_EFFECT_OUTCOMES",
+      "synthesis_options": ["meta_analysis", "other_quantitative", "structured_without_meta_analysis"]
+    },
+    "observational_association": {
+      "eligibility_fields": ["population", "exposure", "comparator_or_reference", "outcome", "timing", "study_design"],
+      "critical_extraction_fields": ["sample_size", "exposure_definition", "outcome_definition", "confounders", "adjusted_estimate", "uncertainty"],
+      "risk_of_bias": "REQUIRED_WHEN_RESULTS_ARE_SYNTHESIZED",
+      "certainty": "PROTOCOL_DECISION",
+      "synthesis_options": ["meta_analysis", "other_quantitative", "structured_without_meta_analysis"]
+    },
+    "ai_diagnostic_prediction": {
+      "eligibility_fields": ["intended_use", "population", "index_model", "target_or_reference", "setting", "validation_type", "outcomes"],
+      "critical_extraction_fields": ["dataset_size", "validation_type", "reference_standard", "threshold", "performance_metric", "estimate", "uncertainty"],
+      "risk_of_bias": "REQUIRED_WHEN_RESULTS_ARE_SYNTHESIZED",
+      "certainty": "PROTOCOL_DECISION",
+      "synthesis_options": ["diagnostic_or_prediction_meta_analysis", "structured_without_meta_analysis", "evidence_map"]
+    },
+    "preclinical_organ_bath": {
+      "eligibility_fields": ["species", "tissue_or_preparation", "experimental_conditions", "exposure", "comparator", "outcome", "design"],
+      "critical_extraction_fields": ["species", "tissue", "bath_conditions", "concentration", "unit", "normalization", "viability_control", "repeated_measure_structure", "result"],
+      "risk_of_bias": "PROTOCOL_DECISION",
+      "certainty": "NOT_REQUIRED_BY_DEFAULT",
+      "synthesis_options": ["meta_analysis", "other_quantitative", "structured_without_meta_analysis", "evidence_map"]
+    },
+    "scoping_evidence_mapping": {
+      "eligibility_fields": ["population", "concept", "context", "evidence_source_type"],
+      "critical_extraction_fields": ["mapping_dimension", "study_design", "population", "concept", "context"],
+      "risk_of_bias": "NOT_REQUIRED_BY_DEFAULT",
+      "certainty": "NOT_REQUIRED_BY_DEFAULT",
+      "synthesis_options": ["descriptive_mapping", "structured_without_meta_analysis", "evidence_map"]
+    }
+  }
+}

@@ -1,0 +1,4 @@
+interface:
+  display_name: "SR Protocol"
+  short_description: "Create the protocol and review configuration."
+  default_prompt: "Use $systematic-review-protocol to define and approve the protocol, eligibility, methods, and active review modules."

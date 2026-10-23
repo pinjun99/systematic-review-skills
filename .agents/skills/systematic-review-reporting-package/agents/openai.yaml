@@ -1,0 +1,4 @@
+interface:
+  display_name: "SR Reporting Package"
+  short_description: "Draft a traceable review report."
+  default_prompt: "Use $systematic-review-reporting-package to draft and reconcile the manuscript using consequential claim tracing."

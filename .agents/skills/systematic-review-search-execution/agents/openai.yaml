@@ -1,0 +1,4 @@
+interface:
+  display_name: "SR Search Execution"
+  short_description: "Execute and document approved searches."
+  default_prompt: "Use $systematic-review-search-execution to run approved searches and preserve reproducible records."

@@ -1,0 +1,707 @@
+{
+  "schema_version": "systematic-review-workspace-1.0",
+  "tool_version": "workspace-adoption-1.0",
+  "notes": {
+    "roles_not_paths": "Entries declare artifact ROLES. Concrete paths are supplied per review at run time, because every review chooses its own approved directories. A role is how a consumer asks for an artifact by meaning rather than by filename.",
+    "terminal_status": "LOCKED when the phase produces its own content-hashed lock artifact; COMPLETED otherwise. The wrapper does not replace a phase's internal lock semantics, it references them.",
+    "consumer_adopted": "All fifteen skills are adopted, so every route's consumer is registered. The flag stays in the schema so a future unadopted route cannot be declared silently.",
+    "no_downstream_creation": "A producer publishes handoffs. It never creates a consumer's run directory or output directory, however distant the consumer.",
+    "deferred_branches": "Phase 14 meta-analysis and Phases 19-20 are deferred. They have no phase id, no registry entry, and no consumer route. A locked Phase 13 synthesis id classified META_ANALYSIS_PLANNED therefore receives no handoff and no directory: nothing here implies that branch exists.",
+    "corrections_are_new_runs": "A Phase 18 finding never mutates a locked run. The responsible workflow starts a NEW run whose parent_run_ids name the superseded run, and the prior locked run and its package stay byte-for-byte unchanged."
+  },
+  "adopted_briefs": [
+    20,
+    21
+  ],
+  "skills": {
+    "systematic-review": {
+      "phase_id": "phase-01-05",
+      "skill_id": "systematic-review",
+      "phases": "1-5",
+      "material_run": "Producing the approved Phase 1-5 requirements document and the machine-readable review-support status.",
+      "advisory_examples": [
+        "clarifying a research idea",
+        "explaining a framework choice",
+        "a preliminary scoping search that produces no delivered requirements document"
+      ],
+      "terminal_status": "COMPLETED",
+      "owned_outputs": [
+        {
+          "role": "phase-1-5-requirements",
+          "description": "Scoping decision, review type and framework, research question, working title, objectives, inclusion and exclusion criteria, outcome and time-point definitions, prospective synthesis requirements, remaining human decisions."
+        },
+        {
+          "role": "review-support-status",
+          "description": "review_support.json and its canonical logical SHA-256 binding."
+        }
+      ],
+      "consumers": [
+        {
+          "consumer_skill": "systematic-review-protocol",
+          "consumer_adopted": true,
+          "artifact_roles": [
+            "phase-1-5-requirements",
+            "review-support-status"
+          ]
+        }
+      ]
+    },
+    "systematic-review-protocol": {
+      "phase_id": "phase-06",
+      "skill_id": "systematic-review-protocol",
+      "phases": "6",
+      "material_run": "Producing the PRISMA-P protocol, locking the canonical eligibility contract, and preparing the registration package.",
+      "advisory_examples": [
+        "explaining a PRISMA-P item",
+        "reviewing a draft protocol without delivering or locking anything"
+      ],
+      "terminal_status": "LOCKED",
+      "owned_outputs": [
+        {
+          "role": "prisma-p-protocol",
+          "description": "Complete PRISMA-P protocol and item map."
+        },
+        {
+          "role": "canonical-eligibility-contract",
+          "description": "The one locked canonical eligibility contract."
+        },
+        {
+          "role": "eligibility-projection-comparison",
+          "description": "Deterministic projection comparison establishing structural conformance only."
+        },
+        {
+          "role": "eligibility-approval-receipt",
+          "description": "Hash-bound human approval receipt for the locked contract."
+        },
+        {
+          "role": "synthesis-plan-v0-1",
+          "description": "Prospective Synthesis Plan v0.1."
+        },
+        {
+          "role": "registration-package",
+          "description": "Registration-ready PROSPERO or OSF content. Submission requires separate human authorization."
+        }
+      ],
+      "consumers": [
+        {
+          "consumer_skill": "systematic-review-search-design",
+          "consumer_adopted": true,
+          "artifact_roles": [
+            "prisma-p-protocol"
+          ]
+        },
+        {
+          "consumer_skill": "systematic-review-title-abstract-screening",
+          "consumer_adopted": true,
+          "artifact_roles": [
+            "canonical-eligibility-contract",
+            "eligibility-projection-comparison",
+            "eligibility-approval-receipt"
+          ]
+        },
+        {
+          "consumer_skill": "systematic-review-full-text-screening",
+          "consumer_adopted": true,
+          "artifact_roles": [
+            "canonical-eligibility-contract",
+            "eligibility-projection-comparison",
+            "eligibility-approval-receipt"
+          ]
+        },
+        {
+          "consumer_skill": "systematic-review-synthesis-planning",
+          "consumer_adopted": true,
+          "artifact_roles": [
+            "synthesis-plan-v0-1",
+            "prisma-p-protocol"
+          ]
+        },
+        {
+          "consumer_skill": "systematic-review-independent-quality-control",
+          "consumer_adopted": true,
+          "artifact_roles": [
+            "prisma-p-protocol",
+            "canonical-eligibility-contract"
+          ]
+        }
+      ]
+    },
+    "systematic-review-search-design": {
+      "phase_id": "phase-07a",
+      "skill_id": "systematic-review-search-design",
+      "phases": "7 search design",
+      "material_run": "Producing the search-strategy package, the PRESS package, and the versioned execution manifest.",
+      "advisory_examples": [
+        "explaining a controlled-vocabulary choice",
+        "reviewing an existing strategy without producing a new manifest version"
+      ],
+      "terminal_status": "COMPLETED",
+      "owned_outputs": [
+        {
+          "role": "search-strategy-package",
+          "description": "Source and platform plan, searchable-concept rationale, terminology matrix, exact strategy per source, validation and sentinel-recall log."
+        },
+        {
+          "role": "press-record",
+          "description": "PRESS package and status. A non-completed PRESS must carry a matching LIMITATION claim downstream."
+        },
+        {
+          "role": "execution-manifest",
+          "description": "Versioned, human-approved execution manifest."
+        }
+      ],
+      "consumers": [
+        {
+          "consumer_skill": "systematic-review-search-execution",
+          "consumer_adopted": true,
+          "artifact_roles": [
+            "execution-manifest",
+            "search-strategy-package"
+          ]
+        },
+        {
+          "consumer_skill": "systematic-review-reporting-package",
+          "consumer_adopted": true,
+          "artifact_roles": [
+            "press-record",
+            "search-strategy-package"
+          ]
+        }
+      ]
+    },
+    "systematic-review-search-execution": {
+      "phase_id": "phase-07b",
+      "skill_id": "systematic-review-search-execution",
+      "phases": "7 search execution",
+      "material_run": "Executing an approved manifest version and preserving its raw exports.",
+      "advisory_examples": [
+        "explaining a platform's export limits",
+        "planning an execution order without running anything"
+      ],
+      "terminal_status": "COMPLETED",
+      "owned_outputs": [
+        {
+          "role": "raw-export-manifest",
+          "description": "Export manifest committing to the untouched raw export files, which are never modified."
+        },
+        {
+          "role": "prisma-s-search-log",
+          "description": "Complete source-by-source PRISMA-S search log and query verification record."
+        },
+        {
+          "role": "count-reconciliation",
+          "description": "Per-source reconciliation of reported and exported counts, plus the exception and interruption log."
+        }
+      ],
+      "consumers": [
+        {
+          "consumer_skill": "systematic-review-deduplication",
+          "consumer_adopted": true,
+          "artifact_roles": [
+            "raw-export-manifest",
+            "count-reconciliation"
+          ]
+        },
+        {
+          "consumer_skill": "systematic-review-reporting-package",
+          "consumer_adopted": true,
+          "artifact_roles": [
+            "prisma-s-search-log",
+            "count-reconciliation"
+          ]
+        }
+      ]
+    },
+    "systematic-review-deduplication": {
+      "phase_id": "phase-08",
+      "skill_id": "systematic-review-deduplication",
+      "phases": "8",
+      "material_run": "Producing the deduplicated, screening-ready citation set from preserved raw exports.",
+      "advisory_examples": [
+        "explaining an ASySD match",
+        "estimating duplicate rates without producing a citation set"
+      ],
+      "terminal_status": "COMPLETED",
+      "owned_outputs": [
+        {
+          "role": "screening-ready-citation-set",
+          "description": "Deduplicated citation set for title-and-abstract screening."
+        },
+        {
+          "role": "deduplication-decision-log",
+          "description": "Automatic and adjudicated duplicate decisions with provenance, distinguishing duplicate database records from multiple reports of one study."
+        },
+        {
+          "role": "prisma-count-reconciliation",
+          "description": "Reconciled PRISMA counts for this stage."
+        }
+      ],
+      "consumers": [
+        {
+          "consumer_skill": "systematic-review-title-abstract-screening",
+          "consumer_adopted": true,
+          "artifact_roles": [
+            "screening-ready-citation-set"
+          ]
+        },
+        {
+          "consumer_skill": "systematic-review-reporting-package",
+          "consumer_adopted": true,
+          "artifact_roles": [
+            "prisma-count-reconciliation",
+            "deduplication-decision-log"
+          ]
+        }
+      ]
+    },
+    "systematic-review-title-abstract-screening": {
+      "phase_id": "phase-09",
+      "skill_id": "systematic-review-title-abstract-screening",
+      "phases": "9",
+      "material_run": "Screening an approved citation set, or migrating a run to a new exclusion-gate version. A migration is a new run; it never mutates its parent.",
+      "advisory_examples": [
+        "explaining the exclusion gate",
+        "forecasting screening cost without screening any record"
+      ],
+      "terminal_status": "COMPLETED",
+      "owned_outputs": [
+        {
+          "role": "screening-run-config",
+          "description": "run_config.json carrying gate_version, canonical_contract_hash, and approval_receipt_hash as immutable resume fields."
+        },
+        {
+          "role": "screening-decisions",
+          "description": "Append-only per-record decisions with reviewer evidence and verified quotations."
+        },
+        {
+          "role": "exclusion-audit",
+          "description": "Exhaustive high-risk census plus a seeded probability sample of the remainder, reported separately. Only the remainder carries an inference."
+        },
+        {
+          "role": "phase-10-full-text-handoff",
+          "description": "Retained-record handoff for full-text retrieval."
+        }
+      ],
+      "consumers": [
+        {
+          "consumer_skill": "systematic-review-full-text-retrieval",
+          "consumer_adopted": true,
+          "artifact_roles": [
+            "phase-10-full-text-handoff"
+          ]
+        },
+        {
+          "consumer_skill": "systematic-review-reporting-package",
+          "consumer_adopted": true,
+          "artifact_roles": [
+            "screening-decisions",
+            "exclusion-audit"
+          ]
+        }
+      ]
+    },
+    "systematic-review-full-text-retrieval": {
+      "phase_id": "phase-10a",
+      "skill_id": "systematic-review-full-text-retrieval",
+      "phases": "10 retrieval",
+      "material_run": "Retrieving and registering verified PDFs for the Phase 9 retained records.",
+      "advisory_examples": [
+        "explaining a lawful access route",
+        "checking which records already have a DOI"
+      ],
+      "terminal_status": "COMPLETED",
+      "owned_outputs": [
+        {
+          "role": "retrieval-manifest",
+          "description": "One row per retained record, with verified hashes and immutable record-based filenames."
+        },
+        {
+          "role": "access-status-log",
+          "description": "Provenance and unresolved-access register. An unretrievable report is a blocking access issue, never an exclusion."
+        }
+      ],
+      "consumers": [
+        {
+          "consumer_skill": "systematic-review-full-text-screening",
+          "consumer_adopted": true,
+          "artifact_roles": [
+            "retrieval-manifest",
+            "access-status-log"
+          ]
+        }
+      ]
+    },
+    "systematic-review-full-text-screening": {
+      "phase_id": "phase-10b",
+      "skill_id": "systematic-review-full-text-screening",
+      "phases": "10 screening",
+      "material_run": "Freezing a screening corpus, screening it, and locking the approved batch.",
+      "advisory_examples": [
+        "explaining a linkage decision",
+        "inspecting a locked store read-only"
+      ],
+      "terminal_status": "LOCKED",
+      "owned_outputs": [
+        {
+          "role": "full-text-screening-lock",
+          "description": "full_text_screening_lock.json, the content hash reverified after locking."
+        },
+        {
+          "role": "full-text-screening-store",
+          "description": "full_text_screening.sqlite, the source of truth. Generated CSV files are views."
+        },
+        {
+          "role": "frozen-export-corpus",
+          "description": "The included-only full_text_extraction_handoff exported for Phase 11. Recorded as one verified artifact and referenced, never duplicated by the workspace layer."
+        }
+      ],
+      "consumers": [
+        {
+          "consumer_skill": "systematic-review-data-extraction",
+          "consumer_adopted": true,
+          "artifact_roles": [
+            "frozen-export-corpus",
+            "full-text-screening-lock"
+          ]
+        },
+        {
+          "consumer_skill": "systematic-review-reporting-package",
+          "consumer_adopted": true,
+          "artifact_roles": [
+            "full-text-screening-lock"
+          ]
+        }
+      ]
+    },
+    "systematic-review-data-extraction": {
+      "phase_id": "phase-11",
+      "skill_id": "systematic-review-data-extraction",
+      "phases": "11",
+      "material_run": "Importing the Phase 10 corpus, piloting and freezing the extraction form, extracting, and locking the dataset.",
+      "advisory_examples": [
+        "explaining an extraction-form field",
+        "reading a locked dataset without extracting anything"
+      ],
+      "terminal_status": "LOCKED",
+      "owned_outputs": [
+        {
+          "role": "extraction-store",
+          "description": "The Phase 11 SQLite evidence store, the source of truth. CSV and Obsidian exports are generated views."
+        },
+        {
+          "role": "extraction-dataset-lock",
+          "description": "dataset_lock_manifest.json, the content hash of the locked dataset version."
+        },
+        {
+          "role": "extraction-exports",
+          "description": "Generated CSV export of the locked dataset version."
+        }
+      ],
+      "consumers": [
+        {
+          "consumer_skill": "systematic-review-risk-of-bias",
+          "consumer_adopted": true,
+          "artifact_roles": [
+            "extraction-dataset-lock",
+            "extraction-store"
+          ]
+        },
+        {
+          "consumer_skill": "systematic-review-synthesis-planning",
+          "consumer_adopted": true,
+          "artifact_roles": [
+            "extraction-dataset-lock"
+          ]
+        }
+      ]
+    },
+    "systematic-review-risk-of-bias": {
+      "phase_id": "phase-12",
+      "skill_id": "systematic-review-risk-of-bias",
+      "phases": "12",
+      "material_run": "Registering tools, freezing targets, piloting, assessing, auditing, and locking the risk-of-bias store.",
+      "advisory_examples": [
+        "explaining a signalling question",
+        "reading a locked assessment without assessing anything"
+      ],
+      "terminal_status": "LOCKED",
+      "owned_outputs": [
+        {
+          "role": "risk-of-bias-store",
+          "description": "risk_of_bias.sqlite, append-only and the source of truth."
+        },
+        {
+          "role": "risk-of-bias-lock",
+          "description": "Lock manifest carrying the canonical logical hash of the assessment version."
+        },
+        {
+          "role": "risk-of-bias-audit",
+          "description": "Audit-sample record. Its scope is estimand_scope DETECTION_ONLY with error_rate_estimate false; it is a detection policy, not an estimator."
+        }
+      ],
+      "consumers": [
+        {
+          "consumer_skill": "systematic-review-synthesis-planning",
+          "consumer_adopted": true,
+          "artifact_roles": [
+            "risk-of-bias-lock"
+          ]
+        },
+        {
+          "consumer_skill": "systematic-review-certainty-of-evidence",
+          "consumer_adopted": true,
+          "artifact_roles": [
+            "risk-of-bias-lock",
+            "risk-of-bias-audit"
+          ]
+        }
+      ]
+    },
+    "systematic-review-synthesis-planning": {
+      "phase_id": "phase-13",
+      "skill_id": "systematic-review-synthesis-planning",
+      "phases": "13",
+      "material_run": "Locking the analysis dataset and Synthesis Plan v1.0 with a classification for every synthesis id.",
+      "advisory_examples": [
+        "explaining why pooling would be inappropriate",
+        "reading a locked plan without producing a new version"
+      ],
+      "terminal_status": "LOCKED",
+      "owned_outputs": [
+        {
+          "role": "analysis-dataset-lock",
+          "description": "The locked analysis dataset for this plan version."
+        },
+        {
+          "role": "synthesis-plan-v1",
+          "description": "Locked machine-readable Synthesis Plan v1.0."
+        },
+        {
+          "role": "synthesis-classification",
+          "description": "Per-synthesis-id classification and amendment log with decision labels."
+        }
+      ],
+      "consumers": [
+        {
+          "consumer_skill": "systematic-review-structured-synthesis",
+          "consumer_adopted": true,
+          "artifact_roles": [
+            "synthesis-plan-v1",
+            "analysis-dataset-lock"
+          ]
+        },
+        {
+          "consumer_skill": "systematic-review-certainty-of-evidence",
+          "consumer_adopted": true,
+          "artifact_roles": [
+            "synthesis-plan-v1",
+            "synthesis-classification"
+          ]
+        }
+      ],
+      "deferred_branches": "A synthesis id classified META_ANALYSIS_PLANNED receives no handoff, because Phase 14 is deferred. An id classified INSUFFICIENT_COMPARABLE_DATA or NEEDS HUMAN DECISION receives no handoff either. No branch directory is created for any of them."
+    },
+    "systematic-review-structured-synthesis": {
+      "phase_id": "phase-13b",
+      "skill_id": "systematic-review-structured-synthesis",
+      "phases": "13 to 15 bridge, synthesis without meta-analysis",
+      "material_run": "Executing and locking structured synthesis for synthesis ids the locked plan classified SYNTHESIS_WITHOUT_META_ANALYSIS_PLANNED.",
+      "advisory_examples": [
+        "explaining the SWiM items",
+        "reading a locked findings package without executing anything"
+      ],
+      "terminal_status": "LOCKED",
+      "owned_outputs": [
+        {
+          "role": "execution-register",
+          "description": "Frozen execution register for the authorized synthesis ids."
+        },
+        {
+          "role": "structured-synthesis-findings",
+          "description": "Locked outcome-level findings package. Not a pooled effect and not Phase 14."
+        },
+        {
+          "role": "swim-crosswalk",
+          "description": "Completed SWiM reporting crosswalk."
+        }
+      ],
+      "consumers": [
+        {
+          "consumer_skill": "systematic-review-certainty-of-evidence",
+          "consumer_adopted": true,
+          "artifact_roles": [
+            "structured-synthesis-findings"
+          ]
+        }
+      ]
+    },
+    "systematic-review-certainty-of-evidence": {
+      "phase_id": "phase-15",
+      "skill_id": "systematic-review-certainty-of-evidence",
+      "phases": "15",
+      "material_run": "Grading each prespecified important outcome and locking the certainty package.",
+      "advisory_examples": [
+        "explaining a GRADE domain",
+        "reading a locked certainty package without grading anything"
+      ],
+      "terminal_status": "LOCKED",
+      "owned_outputs": [
+        {
+          "role": "certainty-package",
+          "description": "Locked outcome-level certainty judgments with evidence and rationale for all five GRADE domains."
+        },
+        {
+          "role": "summary-of-findings",
+          "description": "Approved Summary of Findings tables and plain-language interpretations."
+        }
+      ],
+      "consumers": [
+        {
+          "consumer_skill": "systematic-review-reporting-package",
+          "consumer_adopted": true,
+          "artifact_roles": [
+            "certainty-package",
+            "summary-of-findings"
+          ]
+        }
+      ]
+    },
+    "systematic-review-reporting-package": {
+      "phase_id": "phase-16-17",
+      "skill_id": "systematic-review-reporting-package",
+      "phases": "16 and 17",
+      "material_run": "Producing and locking a reporting package, or producing a NEW package version from an approved Phase 18 correction register.",
+      "advisory_examples": [
+        "explaining the two evidence streams",
+        "reading a locked package without producing a new version"
+      ],
+      "terminal_status": "LOCKED",
+      "owned_outputs": [
+        {
+          "role": "reporting-package-lock",
+          "description": "LOCKED.json for this package version."
+        },
+        {
+          "role": "manuscript",
+          "description": "Integrated manuscript with tables, figures, and supplements."
+        },
+        {
+          "role": "claim-ledger",
+          "description": "Source registry and claim ledger, including any PRESS LIMITATION claim."
+        },
+        {
+          "role": "derived-prisma-counts",
+          "description": "PRISMA counts derived from canonical Phase 8-10 documents with a recorded source, field, and rule per count."
+        },
+        {
+          "role": "phase-18-input",
+          "description": "Generated Phase 18 handoff. It cannot be produced without a valid press_record."
+        }
+      ],
+      "consumers": [
+        {
+          "consumer_skill": "systematic-review-independent-quality-control",
+          "consumer_adopted": true,
+          "artifact_roles": [
+            "reporting-package-lock",
+            "phase-18-input"
+          ]
+        }
+      ],
+      "correction_branch": "Revision mode is a NEW run whose parent_run_ids name the audited run, consuming the Phase 18 correction handoff. The prior locked package is preserved byte-for-byte at its own paths, and the new version returns to a fresh Phase 18 re-audit."
+    },
+    "systematic-review-independent-quality-control": {
+      "phase_id": "phase-18",
+      "skill_id": "systematic-review-independent-quality-control",
+      "phases": "18",
+      "material_run": "Auditing a locked reporting package from a fresh context and locking a new versioned QC package.",
+      "advisory_examples": [
+        "explaining the routing table",
+        "reading a prior audit without producing a new one"
+      ],
+      "terminal_status": "LOCKED",
+      "read_only_toward_inputs": true,
+      "owned_outputs": [
+        {
+          "role": "audit-register",
+          "description": "New versioned audit report. It never edits, patches, or regenerates any audited artifact."
+        },
+        {
+          "role": "correction-register",
+          "description": "New versioned correction register keyed by finding id and routed to the responsible workflow."
+        },
+        {
+          "role": "qc-package-lock",
+          "description": "LOCKED.json for this audit version. A prior audit is never overwritten."
+        }
+      ],
+      "consumers": [
+        {
+          "consumer_skill": "systematic-review-reporting-package",
+          "consumer_adopted": true,
+          "artifact_roles": [
+            "correction-register",
+            "qc-package-lock"
+          ]
+        },
+        {
+          "consumer_skill": "systematic-review-search-execution",
+          "consumer_adopted": true,
+          "artifact_roles": [
+            "correction-register"
+          ]
+        },
+        {
+          "consumer_skill": "systematic-review-deduplication",
+          "consumer_adopted": true,
+          "artifact_roles": [
+            "correction-register"
+          ]
+        },
+        {
+          "consumer_skill": "systematic-review-title-abstract-screening",
+          "consumer_adopted": true,
+          "artifact_roles": [
+            "correction-register"
+          ]
+        },
+        {
+          "consumer_skill": "systematic-review-full-text-screening",
+          "consumer_adopted": true,
+          "artifact_roles": [
+            "correction-register"
+          ]
+        },
+        {
+          "consumer_skill": "systematic-review-data-extraction",
+          "consumer_adopted": true,
+          "artifact_roles": [
+            "correction-register"
+          ]
+        },
+        {
+          "consumer_skill": "systematic-review-risk-of-bias",
+          "consumer_adopted": true,
+          "artifact_roles": [
+            "correction-register"
+          ]
+        },
+        {
+          "consumer_skill": "systematic-review-synthesis-planning",
+          "consumer_adopted": true,
+          "artifact_roles": [
+            "correction-register"
+          ]
+        },
+        {
+          "consumer_skill": "systematic-review-certainty-of-evidence",
+          "consumer_adopted": true,
+          "artifact_roles": [
+            "correction-register"
+          ]
+        }
+      ],
+      "correction_branch": "A re-audit is a NEW run whose parent_run_ids name the superseded audit, consuming the corrected package's handoff. A resolution claim never closes a finding; only an independent re-audit of the new locked version does."
+    }
+  }
+}

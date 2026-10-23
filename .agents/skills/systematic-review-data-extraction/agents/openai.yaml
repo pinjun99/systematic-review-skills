@@ -1,0 +1,4 @@
+interface:
+  display_name: "SR Data Extraction"
+  short_description: "Extract and verify review data."
+  default_prompt: "Use $systematic-review-data-extraction to extract data using risk-based verification."

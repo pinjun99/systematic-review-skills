@@ -1,0 +1,20 @@
+# macOS
+.DS_Store
+
+# Secrets and local environment
+.env*
+
+# Review files that can contain licensed or personal data
+*.pdf
+*.sqlite
+*.sqlite3
+*.sqlite-journal
+*.sqlite-wal
+*.sqlite-shm
+*.ris
+
+# Python local environments
+__pycache__/
+*.py[cod]
+.venv/
+venv/

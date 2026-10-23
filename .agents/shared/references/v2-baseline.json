@@ -1,0 +1,13 @@
+{
+  "baseline_source": "Pre-release snapshot captured on 2026-08-03. The counts below are the legacy baseline. This repository does not contain the commit they were measured from.",
+  "captured_on": "2026-08-03",
+  "skill_count": 15,
+  "skill_instruction_lines": 4021,
+  "required_reference_lines": 3205,
+  "repeated_lifecycle_lines": 1070,
+  "owned_output_roles": 48,
+  "consumer_routes": 35,
+  "approval_instruction_occurrences": 50,
+  "model_benchmark_status": "PENDING_IDENTICAL_MODEL_RUN",
+  "promotion_allowed": false
+}

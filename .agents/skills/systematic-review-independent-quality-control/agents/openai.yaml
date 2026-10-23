@@ -1,0 +1,4 @@
+interface:
+  display_name: "SR Quality Control"
+  short_description: "Audit high-consequence review content."
+  default_prompt: "Use $systematic-review-independent-quality-control to perform risk-based independent quality control and local corrections."

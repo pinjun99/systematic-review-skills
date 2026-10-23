@@ -1,0 +1,4 @@
+interface:
+  display_name: "SR Full Text Retrieval"
+  short_description: "Retrieve and track full-text reports."
+  default_prompt: "Use $systematic-review-full-text-retrieval to retrieve full texts and document access exceptions."

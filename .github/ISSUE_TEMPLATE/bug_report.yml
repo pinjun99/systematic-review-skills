@@ -1,0 +1,43 @@
+name: Bug report
+description: Report a defect in a skill, validator, test, or document.
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report this. Do not include patient data, copyrighted full texts, API keys, search exports, or SQLite databases.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: How to reproduce
+      description: Name the skill or command and give the smallest example that shows the problem. Use fictional study data.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Release tag or commit SHA, and the Python version.
+      placeholder: 0.1.0, Python 3.12
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Skill instructions
+        - Validator or workspace lifecycle
+        - Tests
+        - Documentation
+        - Something else
+    validations:
+      required: true

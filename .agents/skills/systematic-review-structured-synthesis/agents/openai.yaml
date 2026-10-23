@@ -1,0 +1,4 @@
+interface:
+  display_name: "SR Structured Synthesis"
+  short_description: "Perform justified quantitative or structured synthesis."
+  default_prompt: "Use $systematic-review-structured-synthesis to synthesize evidence without effect-driven method changes."

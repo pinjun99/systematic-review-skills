@@ -1,0 +1,4 @@
+interface:
+  display_name: "SR Full Text Screening"
+  short_description: "Screen full texts with decisive evidence."
+  default_prompt: "Use $systematic-review-full-text-screening to decide full-text eligibility without universal quotations."

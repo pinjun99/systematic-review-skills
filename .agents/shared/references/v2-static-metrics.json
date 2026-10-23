@@ -1,0 +1,14 @@
+{
+  "captured_on": "2026-08-03",
+  "skill_count": 15,
+  "primary_instruction_lines": 472,
+  "markdown_reference_lines": 117,
+  "repeated_workspace_lifecycle_sections": 0,
+  "scheduled_milestones": 5,
+  "v1_primary_instruction_lines": 4021,
+  "v1_reference_lines": 3205,
+  "primary_instruction_reduction_percent": 88.26,
+  "all_skill_markdown_reduction_percent": 91.85,
+  "model_token_and_time_status": "PENDING_IDENTICAL_MODEL_RUN",
+  "release_status": "BLOCKED_PENDING_MODEL_BENCHMARK"
+}

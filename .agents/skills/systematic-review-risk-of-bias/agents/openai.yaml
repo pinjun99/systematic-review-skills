@@ -1,0 +1,4 @@
+interface:
+  display_name: "SR Risk of Bias"
+  short_description: "Assess design-appropriate risk of bias."
+  default_prompt: "Use $systematic-review-risk-of-bias to assess risk of bias with official tools and targeted adjudication."

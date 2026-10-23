@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+message: If you use this software, please cite it using the metadata below.
+type: software
+title: Systematic Review Skills
+abstract: >-
+  An early-stage skill suite that guides an AI-assisted systematic review from
+  protocol to publication package, with human approval at five milestones.
+authors:
+  - family-names: Ooi
+    given-names: Pin Jun
+    alias: pinjun99
+    website: https://github.com/pinjun99
+repository-code: https://github.com/pinjun99/Systematic_Review
+url: https://github.com/pinjun99/Systematic_Review
+license: Apache-2.0
+version: 0.1.0
+date-released: "2026-10-22"
+keywords:
+  - systematic-review
+  - evidence-synthesis
+  - meta-analysis
+  - artificial-intelligence

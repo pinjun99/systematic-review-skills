@@ -1,0 +1,4 @@
+interface:
+  display_name: "SR Deduplication"
+  short_description: "Deduplicate records with stable identifiers."
+  default_prompt: "Use $systematic-review-deduplication to identify duplicate reports while preserving provenance."

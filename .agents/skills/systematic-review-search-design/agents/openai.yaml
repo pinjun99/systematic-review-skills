@@ -1,0 +1,4 @@
+interface:
+  display_name: "SR Search Design"
+  short_description: "Design reproducible database searches."
+  default_prompt: "Use $systematic-review-search-design to design and peer-check the review search strategies."
