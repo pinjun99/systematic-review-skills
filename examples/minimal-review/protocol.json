@@ -1,0 +1,43 @@
+{
+  "schema_version": "2.0",
+  "review_id": "fictional-token-map",
+  "protocol_version": "1.0",
+  "status": "DRAFT",
+  "fictional": true,
+  "question": "Which teaching formats are described in invented classroom token-sorting studies?",
+  "eligibility": {
+    "population": "Fictional adult learners",
+    "concept": "Teaching token sorting",
+    "context": "Imaginary classrooms",
+    "evidence_source_type": "Invented primary study reports"
+  },
+  "planned_extraction_fields": [
+    "mapping_dimension",
+    "study_design",
+    "population",
+    "concept",
+    "context"
+  ],
+  "synthesis": {
+    "method": "evidence_map",
+    "dimensions": [
+      "teaching_format",
+      "study_design"
+    ]
+  },
+  "appraisal": {
+    "required": false,
+    "reason": "This teaching example maps study descriptions only."
+  },
+  "certainty": {
+    "required": false,
+    "reason": "No effect estimates or certainty claims are planned."
+  },
+  "illustrative_studies": [
+    {
+      "study_id": "FICTIONAL-S001",
+      "report_id": "FICTIONAL-R001",
+      "title": "Invented study of picture cards in the imaginary Lantern classroom"
+    }
+  ]
+}

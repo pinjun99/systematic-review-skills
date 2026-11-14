@@ -1,0 +1,16 @@
+{
+  "schema_version": "2.0",
+  "review_id": "fictional-token-map",
+  "title": "Fictional classroom token-sorting studies: an evidence map",
+  "protocol_version": "1.0",
+  "active_modules": [
+    "scoping_evidence_mapping"
+  ],
+  "team_roles": {
+    "owner": "Fictional Reviewer"
+  },
+  "ai_policy": {
+    "posture": "AI_FIRST_RISK_BASED",
+    "paid_api_authorized": false
+  }
+}

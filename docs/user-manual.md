@@ -171,7 +171,9 @@ next skill.
 
 Shared JSON is validated with `.agents/shared/v2_runtime.py`. Screening
 resolutions use `.agents/shared/v2_screening.py`, and local issue routing
-uses `.agents/shared/v2_corrections.py`.
+uses `.agents/shared/v2_corrections.py`. The [minimal fictional review](../examples/minimal-review/README.md)
+shows runnable validation commands and expected output; the [CLI reference](validators.md)
+covers all shared command-line tools and their limits.
 
 ## 10. Limits of this release
 
@@ -202,4 +204,5 @@ files are not ignored.
 Use [Outputs by step](pipeline-map.md) to see exactly what each skill consumes,
 what it produces, its completion signal, and the next skill. For background on
 how a health-intervention review is conducted, see
-[A–Z methods outline](systematic-review-a-to-z.md).
+[A–Z methods outline](systematic-review-a-to-z.md). Contributors extending the
+review types should follow [adding a method module](method-modules.md).

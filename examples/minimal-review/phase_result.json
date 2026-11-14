@@ -1,0 +1,13 @@
+{
+  "schema_version": "2.0",
+  "phase": "protocol",
+  "state": "NEEDS_HUMAN",
+  "input_refs": [
+    "review_config.json"
+  ],
+  "output_refs": [
+    "protocol.json"
+  ],
+  "unresolved_issue_ids": [],
+  "next_phase": "search_design"
+}

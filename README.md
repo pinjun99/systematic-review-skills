@@ -34,7 +34,9 @@ qualified professional.
 
 ## Quick start
 
-Open this repository in Codex and begin with the coordinator skill:
+Clone this repository or copy its `.agents/skills/` folders into your project;
+keep `.agents/shared/` alongside them for the validators and shared references.
+Open the project in Codex and begin with the coordinator skill:
 
 > Use `$systematic-review` to start a new review about `[topic]`. Create the
 > protocol and review configuration, ask me only for required scientific
@@ -53,8 +55,12 @@ You may also invoke a phase skill directly when its required inputs are ready:
 > approval. Do not execute the searches.
 
 The skills are Markdown instructions. They are written and tested for Codex.
-Another agent can read the same files; that path is not covered by the test
-suite.
+For Claude Code, ask it to read `.agents/skills/systematic-review/SKILL.md`
+and follow its links to the active phase. This manual-loading path is not
+covered by the test suite.
+
+Try the [minimal fictional review](examples/minimal-review/README.md) to validate
+the configuration and phase result locally before starting your own review.
 
 ## Install
 
@@ -72,6 +78,8 @@ After installing or changing the collection, run:
 ```bash
 python3 .agents/run_tests.py
 ```
+
+See the [CLI reference](docs/validators.md) for individual commands.
 
 ## How the workflow is organized
 
@@ -155,6 +163,8 @@ is loaded.
 Please read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request,
 and the [Code of Conduct](CODE_OF_CONDUCT.md) in every community space. Report
 vulnerabilities privately, as described in [SECURITY.md](SECURITY.md).
+
+To extend the supported review types, see [adding a method module](docs/method-modules.md).
 
 Contributions are licensed under the Apache License, Version 2.0. Run
 `python3 .agents/run_tests.py` before you ask for review. Do not change
