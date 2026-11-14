@@ -215,6 +215,9 @@ def release_gate(
     efficiency = efficiency_metrics(v1_efficiency, v2_efficiency)
     return {
         "release_status": "PASS" if science_gate["passed"] and efficiency["passed"] else "BLOCKED",
+        # Metric gates do not verify real paired model executions. Fail closed
+        # until paired-run provenance is implemented; fixtures may also PASS.
+        "promotion_allowed": False,
         "scientific_gate": science_gate,
         "scientific_metrics": {"v1": v1_science, "v2": v2_science},
         "efficiency_gate": efficiency,

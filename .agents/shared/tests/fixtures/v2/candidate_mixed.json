@@ -1,0 +1,23 @@
+{
+  "synthetic": true,
+  "description": "Fictional candidate: CI-01 is falsely excluded; efficiency passes. No real paired model runs.",
+  "v2_run": [
+    {"case_id": "CI-01", "decision": "exclude", "primary_reason_code": null, "critical_fields": {"sample_size": 120}, "evidence_verified": true, "expert_judgments": {"synthesis": "meta_analysis_eligible"}},
+    {"case_id": "CI-02", "decision": "uncertain", "primary_reason_code": null, "critical_fields": {}, "evidence_verified": true, "expert_judgments": {}},
+    {"case_id": "CI-03", "decision": "include", "primary_reason_code": null, "critical_fields": {"reports": 2}, "evidence_verified": true, "expert_judgments": {}},
+    {"case_id": "OA-01", "decision": "exclude", "primary_reason_code": "WRONG_POPULATION", "critical_fields": {}, "evidence_verified": true, "expert_judgments": {}},
+    {"case_id": "OA-02", "decision": "uncertain", "primary_reason_code": null, "critical_fields": {}, "evidence_verified": true, "expert_judgments": {}},
+    {"case_id": "OA-03", "decision": "uncertain", "primary_reason_code": null, "critical_fields": {}, "evidence_verified": true, "expert_judgments": {}},
+    {"case_id": "AI-01", "decision": "include", "primary_reason_code": null, "critical_fields": {"auroc": 0.87}, "evidence_verified": true, "expert_judgments": {"appraisal": "high_risk"}},
+    {"case_id": "AI-02", "decision": "uncertain", "primary_reason_code": null, "critical_fields": {}, "evidence_verified": true, "expert_judgments": {}},
+    {"case_id": "AI-03", "decision": "exclude", "primary_reason_code": "NO_ELIGIBLE_EVALUATION", "critical_fields": {}, "evidence_verified": true, "expert_judgments": {}},
+    {"case_id": "OB-01", "decision": "include", "primary_reason_code": null, "critical_fields": {"concentration_unit": "µM"}, "evidence_verified": true, "expert_judgments": {"synthesis": "structured_only"}},
+    {"case_id": "OB-02", "decision": "uncertain", "primary_reason_code": null, "critical_fields": {}, "evidence_verified": true, "expert_judgments": {}},
+    {"case_id": "OB-03", "decision": "exclude", "primary_reason_code": "WRONG_EXPERIMENTAL_MODEL", "critical_fields": {}, "evidence_verified": true, "expert_judgments": {}},
+    {"case_id": "SC-01", "decision": "include", "primary_reason_code": null, "critical_fields": {"concept_count": 3}, "evidence_verified": true, "expert_judgments": {}},
+    {"case_id": "SC-02", "decision": "uncertain", "primary_reason_code": null, "critical_fields": {}, "evidence_verified": true, "expert_judgments": {}},
+    {"case_id": "SC-03", "decision": "exclude", "primary_reason_code": "WRONG_CONCEPT", "critical_fields": {}, "evidence_verified": true, "expert_judgments": {}}
+  ],
+  "v1_efficiency": {"mandatory_context": 1000, "quotation_entries": 100, "approval_pauses": 15, "tokens": [1000, 1100, 900], "seconds": [100, 110, 90], "recomputed_records": 100, "phase_wide_rerun": true},
+  "v2_efficiency": {"mandatory_context": 550, "quotation_entries": 40, "approval_pauses": 5, "tokens": [650, 700, 600], "seconds": [65, 70, 60], "recomputed_records": 40, "phase_wide_rerun": false}
+}

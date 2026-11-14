@@ -116,5 +116,53 @@ class EfficiencyBenchmarkTests(unittest.TestCase):
         self.assertEqual("BLOCKED", result["release_status"])
 
 
+class PromotionSafetyTests(unittest.TestCase):
+    def setUp(self):
+        self.gold = json.loads(GOLD_PATH.read_text(encoding="utf-8"))
+        self.fixture = json.loads(
+            GOLD_PATH.with_name("candidate_mixed.json").read_text(encoding="utf-8")
+        )
+
+    def evaluate(self, candidate):
+        return release_gate(
+            self.gold, perfect_run(self.gold), candidate,
+            self.fixture["v1_efficiency"], self.fixture["v2_efficiency"],
+        )
+
+    def test_mixed_fixture_fails_only_scientific_gate(self):
+        self.assertIs(self.fixture["synthetic"], True)
+        result = self.evaluate(self.fixture["v2_run"])
+        self.assertEqual(
+            {"passed": False,
+             "reasons": ["candidate falsely excluded at least one study"]},
+            result["scientific_gate"],
+        )
+        self.assertEqual(
+            ["CI-01"], result["scientific_metrics"]["v2"]["false_exclusion_case_ids"]
+        )
+        self.assertIs(result["efficiency_gate"]["passed"], True)
+        self.assertEqual([], result["efficiency_gate"]["reasons"])
+        self.assertEqual("BLOCKED", result["release_status"])
+        self.assertIs(result["promotion_allowed"], False)
+
+    def test_passing_synthetic_fixture_cannot_allow_promotion(self):
+        self.fixture["v2_run"][0]["decision"] = "include"
+        result = self.evaluate(self.fixture["v2_run"])
+        self.assertIs(result["scientific_gate"]["passed"], True)
+        self.assertIs(result["efficiency_gate"]["passed"], True)
+        self.assertEqual("PASS", result["release_status"])
+        self.assertIs(result["promotion_allowed"], False)
+
+    def test_pending_benchmark_cannot_promote_even_without_synthetic_label(self):
+        baseline = json.loads(
+            (SHARED / "references" / "v2-baseline.json").read_text(encoding="utf-8")
+        )
+        self.assertEqual("PENDING_IDENTICAL_MODEL_RUN", baseline["model_benchmark_status"])
+        self.assertIs(baseline["promotion_allowed"], False)
+        result = self.evaluate(perfect_run(self.gold))
+        self.assertEqual("PASS", result["release_status"])
+        self.assertIs(result["promotion_allowed"], False)
+
+
 if __name__ == "__main__":
     unittest.main()
