@@ -10,23 +10,9 @@ from typing import List, Sequence
 ROOT = Path(__file__).resolve().parent.parent
 AGENTS_ROOT = ROOT / ".agents"
 
-# These modules do not describe the lean tree that ships today.
-# test_eligibility_contract.py imports screening_store.py, which is absent.
-# test_workspace_adoption.py requires a "## Workspace lifecycle" section that
-# the lean skills intentionally omit (see test_v2_skills.py).
-EXCLUDED_TESTS = {
-    "test_eligibility_contract.py",
-    "test_workspace_adoption.py",
-}
-
 
 def discover_python_tests() -> List[Path]:
-    discovered = []
-    for path in sorted(AGENTS_ROOT.rglob("test_*.py")):
-        if path.name in EXCLUDED_TESTS:
-            continue
-        discovered.append(path)
-    return discovered
+    return sorted(AGENTS_ROOT.rglob("test_*.py"))
 
 
 def discover_node_tests() -> List[Path]:

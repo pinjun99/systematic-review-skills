@@ -13,14 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Contract tests for workspace-lifecycle adoption by the review skills.
+"""Tests for the shipped workspace registry and producer/consumer lifecycle.
 
-Two halves. The static half checks that every adopted skill declares its
-ownership, terminal outputs, and consumer routes consistently in both the
-machine-readable registry and its own SKILL.md, and that no skill instructs a
-producer to create a consumer's directory. The integration half runs real
-producer/consumer chains against the lifecycle to prove the declared routes
-work and create nothing downstream.
+Registry tests check ownership, terminal outputs, and consumer routes.
+Integration tests exercise real handoffs, corrections, and input integrity.
+Lean skills omit the former lifecycle sections and command examples.
 """
 
 from __future__ import annotations
@@ -29,7 +26,6 @@ import json
 from pathlib import Path
 import re
 import shutil
-import subprocess
 import sys
 import tempfile
 import unittest
@@ -47,8 +43,6 @@ import workspace_lifecycle as wl  # noqa: E402
 
 REGISTRY_PATH = SHARED / "references" / "workspace-adoption.json"
 REGISTRY = json.loads(REGISTRY_PATH.read_text(encoding="utf-8"))
-
-SECTION_HEADING = "## Workspace lifecycle"
 
 # Brief 20 adopts phases 1 through 10. Brief 21 adds the rest; this list is a
 # subset assertion so a later brief extends the registry without editing it.
@@ -91,26 +85,6 @@ REQUIRED_ENTRY_FIELDS = (
 
 def skill_text(skill_id: str) -> str:
     return (SKILLS / skill_id / "SKILL.md").read_text(encoding="utf-8")
-
-
-def lifecycle_section(skill_id: str) -> str:
-    text = skill_text(skill_id)
-    index = text.index(SECTION_HEADING)
-    return text[index:]
-
-
-def bash_blocks(section: str) -> list:
-    return re.findall(r"```bash\n(.*?)```", section, flags=re.DOTALL)
-
-
-def bullet_block(section: str, heading: str, until: str) -> str:
-    """Return one bullet list from the section, not the whole section.
-
-    Checking a role against the whole section is too weak: a role named only in
-    the consumer routes would satisfy an ownership assertion.
-    """
-    start = section.index(heading) + len(heading)
-    return section[start : section.index(until, start)]
 
 
 class RegistryTests(unittest.TestCase):
@@ -208,16 +182,13 @@ class RegistryTests(unittest.TestCase):
         for phase in DEFERRED_PHASES:
             self.assertNotIn(f"runs/{phase}", blob)
             for skill_id in REGISTRY["skills"]:
-                self.assertNotIn(f"runs/{phase}", lifecycle_section(skill_id), skill_id)
+                self.assertNotIn(f"runs/{phase}", skill_text(skill_id), skill_id)
 
         plan = REGISTRY["skills"]["systematic-review-synthesis-planning"]
         deferred = plan["deferred_branches"]
         self.assertIn("META_ANALYSIS_PLANNED", deferred)
         self.assertIn("no handoff", deferred)
         self.assertIn("deferred", deferred)
-        self.assertIn(
-            deferred, lifecycle_section("systematic-review-synthesis-planning")
-        )
         routed = {consumer["consumer_skill"] for consumer in plan["consumers"]}
         self.assertEqual(
             routed,
@@ -247,10 +218,6 @@ class RegistryTests(unittest.TestCase):
             self.assertIn(store, roles, f"{skill_id} store is not a terminal output")
             self.assertIn(lock, roles, f"{skill_id} lock is not a terminal output")
             self.assertEqual(entry["terminal_status"], wl.STATUS_LOCKED, skill_id)
-            block = "\n".join(bash_blocks(lifecycle_section(skill_id)))
-            self.assertIn(f"--output {store}=$OUT/", block, skill_id)
-            self.assertIn(f"--output {lock}=$OUT/", block, skill_id)
-            self.assertIn(".sqlite", block, f"{skill_id} drops its SQLite store")
 
     def test_correction_branches_create_new_runs(self) -> None:
         for skill_id in (
@@ -261,7 +228,6 @@ class RegistryTests(unittest.TestCase):
             branch = entry["correction_branch"]
             self.assertIn("NEW run", branch, skill_id)
             self.assertIn("parent_run_ids", branch, skill_id)
-            self.assertIn(branch, lifecycle_section(skill_id), skill_id)
         preserved = REGISTRY["skills"]["systematic-review-reporting-package"][
             "correction_branch"
         ]
@@ -270,9 +236,6 @@ class RegistryTests(unittest.TestCase):
     def test_phase_18_is_declared_read_only_toward_its_inputs(self) -> None:
         entry = REGISTRY["skills"]["systematic-review-independent-quality-control"]
         self.assertTrue(entry["read_only_toward_inputs"])
-        section = lifecycle_section(entry["skill_id"])
-        self.assertIn("Read-only toward its inputs", section)
-        self.assertIn("cannot complete", section)
         for output in entry["owned_outputs"]:
             description = output["description"]
             self.assertTrue(
@@ -286,98 +249,14 @@ class RegistryTests(unittest.TestCase):
 
 
 class SkillDocumentationTests(unittest.TestCase):
-    """Each SKILL.md declares the same contract the registry does."""
-
-    def test_every_adopted_skill_has_exactly_one_section(self) -> None:
-        for skill_id in REGISTRY["skills"]:
-            text = skill_text(skill_id)
-            self.assertEqual(
-                text.count(SECTION_HEADING), 1, f"{skill_id} section count"
-            )
-
-    def test_the_section_declares_ownership_and_terminal_outputs(self) -> None:
-        for skill_id, entry in REGISTRY["skills"].items():
-            section = lifecycle_section(skill_id)
-            self.assertIn(f"`{entry['phase_id']}`", section, skill_id)
-            self.assertIn(f"`{skill_id}`", section, skill_id)
-            self.assertIn(entry["material_run"], section, skill_id)
-            self.assertIn(f"`{entry['terminal_status']}`", section, skill_id)
-            owned = bullet_block(
-                section,
-                "- Owned outputs, as terminal artifact roles:",
-                "- Terminal status:",
-            )
-            for output in entry["owned_outputs"]:
-                self.assertIn(f"`{output['role']}` —", owned, output["role"])
-            declared = set(re.findall(r"^  - `([\w.-]+)` —", owned, flags=re.M))
-            self.assertEqual(
-                declared,
-                {output["role"] for output in entry["owned_outputs"]},
-                f"{skill_id} owned outputs disagree with the registry",
-            )
-
-    def test_the_section_declares_every_consumer_route(self) -> None:
-        for skill_id, entry in REGISTRY["skills"].items():
-            section = lifecycle_section(skill_id)
-            routes = bullet_block(
-                section, "- Downstream consumers:", "\n\nWrap the existing"
-            )
-            for consumer in entry["consumers"]:
-                self.assertIn(
-                    f"`{consumer['consumer_skill']}`",
-                    routes,
-                    f"{skill_id} does not document consumer "
-                    f"{consumer['consumer_skill']}",
-                )
-                for role in consumer["artifact_roles"]:
-                    self.assertIn(f"`{role}`", routes, f"{skill_id}->{role}")
-            documented = set(
-                re.findall(r"^  - `([\w.-]+)`", routes, flags=re.M)
-            )
-            self.assertEqual(
-                documented,
-                {c["consumer_skill"] for c in entry["consumers"]},
-                f"{skill_id} consumer routes disagree with the registry",
-            )
-
-    def test_advisory_use_is_documented_as_creating_no_run(self) -> None:
-        for skill_id in REGISTRY["skills"]:
-            section = lifecycle_section(skill_id)
-            self.assertIn("Advisory use creates no run", section, skill_id)
-
-    def test_every_skill_states_the_reconciled_definition_of_complete(self) -> None:
-        """O3: the operator-facing files carried the pre-revision-6 wording.
-
-        "A run is complete only when run_manifest.json exists" is true as a
-        necessary condition and false as a definition — it is the manifest-only
-        rule that produced F7. These are the files an operator actually reads.
-        """
-        for skill_id in REGISTRY["skills"]:
-            section = " ".join(lifecycle_section(skill_id).split())
-            self.assertIn(
-                "a run is complete only when its directory carries "
-                "`run_manifest.json` *and* the ledger records the matching "
-                "terminal event",
-                section,
-                f"{skill_id} does not state the reconciled definition",
-            )
-            self.assertNotIn(
-                "a run is complete only when `run_manifest.json` exists",
-                section,
-                f"{skill_id} still states the manifest-only rule",
-            )
+    """Skills must not instruct producers to write into consumer directories."""
 
     def test_no_skill_instructs_a_producer_to_create_a_consumer_directory(self) -> None:
         others = {
             entry["phase_id"] for entry in REGISTRY["skills"].values()
         }
         for skill_id, entry in REGISTRY["skills"].items():
-            section = lifecycle_section(skill_id)
-            self.assertIn(
-                "creates no consumer run directory and no consumer output",
-                section,
-                f"{skill_id} does not state the rule",
-            )
+            section = skill_text(skill_id)
             self.assertNotIn("mkdir", section, f"{skill_id} tells a producer to mkdir")
             for foreign in others - {entry["phase_id"]}:
                 self.assertNotIn(
@@ -385,93 +264,9 @@ class SkillDocumentationTests(unittest.TestCase):
                     section,
                     f"{skill_id} writes into {foreign}",
                 )
-            # Any run directory the section assigns to must be its own.
+            # Any run directory the skill assigns to must be its own.
             for assigned in re.findall(r"RUN=\$REVIEW/runs/([\w.-]+)/", section):
                 self.assertEqual(assigned, entry["phase_id"], skill_id)
-
-    def test_examples_are_valid_bash(self) -> None:
-        for skill_id in REGISTRY["skills"]:
-            blocks = bash_blocks(lifecycle_section(skill_id))
-            self.assertTrue(blocks, f"{skill_id} has no runnable example")
-            for index, block in enumerate(blocks):
-                completed = subprocess.run(
-                    ["bash", "-n"], input=block, capture_output=True, text=True
-                )
-                self.assertEqual(
-                    completed.returncode,
-                    0,
-                    f"{skill_id} block {index} is not valid bash:\n"
-                    f"{completed.stderr}",
-                )
-
-    def test_a_continuation_never_runs_into_a_comment_or_blank_line(self) -> None:
-        """`bash -n` cannot catch this, and it silently truncates a command.
-
-        A line ending in a backslash joins the next line. If that next line is a
-        comment, the rest of the command is swallowed and the remaining flag
-        lines become separate commands — still valid bash, completely wrong.
-        """
-        for skill_id in REGISTRY["skills"]:
-            for block in bash_blocks(lifecycle_section(skill_id)):
-                lines = block.splitlines()
-                for index, line in enumerate(lines[:-1]):
-                    if not line.rstrip().endswith("\\"):
-                        continue
-                    following = lines[index + 1].strip()
-                    self.assertTrue(
-                        following and not following.startswith("#"),
-                        f"{skill_id} line {index + 1} continues into "
-                        f"{following!r}, truncating the command",
-                    )
-
-    def test_examples_start_and_complete_a_wrapper_run(self) -> None:
-        for skill_id, entry in REGISTRY["skills"].items():
-            block = "\n".join(bash_blocks(lifecycle_section(skill_id)))
-            for command in ("start-run", "complete-run", "create-handoff"):
-                self.assertIn(command, block, f"{skill_id} example lacks {command}")
-            for output in entry["owned_outputs"]:
-                self.assertIn(
-                    f"--output {output['role']}=$OUT/",
-                    block,
-                    f"{skill_id} does not declare {output['role']} as an owned output",
-                )
-            self.assertIn(f"--status {entry['terminal_status']}", block, skill_id)
-
-    def test_example_run_ids_are_unique_across_phases(self) -> None:
-        """create-handoff resolves a producer by run ID alone."""
-        seen = {}
-        for skill_id in REGISTRY["skills"]:
-            block = "\n".join(bash_blocks(lifecycle_section(skill_id)))
-            ids = set(re.findall(r"--run-id ([\w.-]+)", block))
-            self.assertEqual(len(ids), 1, f"{skill_id} uses several run ids")
-            run_id = ids.pop()
-            self.assertNotIn(
-                run_id, seen, f"{skill_id} reuses run id {run_id} from {seen.get(run_id)}"
-            )
-            seen[run_id] = skill_id
-            self.assertIn(f"--producer-run-id {run_id}", block, skill_id)
-
-    def test_existing_phase_commands_are_retained(self) -> None:
-        """Adoption wraps the phase; it does not replace its commands."""
-        expected = {
-            "systematic-review-protocol": "eligibility_contract.py",
-            "systematic-review-search-execution": "press_gate.py",
-            "systematic-review-deduplication": "deduplicate.R",
-            "systematic-review-title-abstract-screening": "screen_records.mjs",
-            "systematic-review-full-text-retrieval": "manage_retrieval.py",
-            "systematic-review-full-text-screening": "screening_store.py",
-            "systematic-review-data-extraction": "extraction_store.py",
-            "systematic-review-risk-of-bias": "risk_of_bias_store.py",
-            "systematic-review-synthesis-planning": "synthesis_plan.py",
-            "systematic-review-structured-synthesis": "structured_synthesis.py",
-            "systematic-review-certainty-of-evidence": "certainty_of_evidence.py",
-            "systematic-review-reporting-package": "reporting_package.py",
-            "systematic-review-independent-quality-control": "independent_qc.py",
-        }
-        for skill_id, command in expected.items():
-            block = "\n".join(bash_blocks(lifecycle_section(skill_id)))
-            self.assertIn(command, block, f"{skill_id} dropped {command}")
-            self.assertIn(command, skill_text(skill_id), skill_id)
 
 
 class FixtureHarness(unittest.TestCase):

@@ -13,19 +13,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Tests for canonical eligibility contracts and Phase 10 fidelity freeze."""
+"""Tests for canonical eligibility contracts and approval receipts."""
 
 from __future__ import annotations
 
 from contextlib import redirect_stderr
-import argparse
 from copy import deepcopy
 import hashlib
 import io
-import importlib.util
 import json
 from pathlib import Path
-import sqlite3
 import sys
 import tempfile
 import unittest
@@ -49,20 +46,6 @@ from eligibility_contract import (  # noqa: E402
     validate_approval_receipt,
     validate_contract,
 )
-
-
-STORE_PATH = (
-    ROOT
-    / ".agents"
-    / "skills"
-    / "systematic-review-full-text-screening"
-    / "scripts"
-    / "screening_store.py"
-)
-STORE_SPEC = importlib.util.spec_from_file_location("screening_store", STORE_PATH)
-assert STORE_SPEC and STORE_SPEC.loader
-screening_store = importlib.util.module_from_spec(STORE_SPEC)
-STORE_SPEC.loader.exec_module(screening_store)
 
 
 def file_hash(path: Path) -> str:
@@ -421,16 +404,27 @@ class EligibilityContractTests(unittest.TestCase):
         ):
             validate_approval_receipt(tampered_receipt)
 
-
-
-    def test_phase10_initialization_rejects_hand_authored_criteria(self) -> None:
+    def test_full_text_approval_rejects_hand_authored_criteria(self) -> None:
         artifacts = self._lock_and_artifacts("full_text")
         manual = deepcopy(artifacts["projection"])
         del manual["projection_type"]
+        comparison = compare_projection(artifacts["locked"], manual, "full_text")
+        # Bind the edited files correctly so rejection tests the projection
+        # contract, rather than merely detecting an outdated file hash.
+        manual["projection_hash"] = comparison["actual_projection_hash"]
+        write_json(artifacts["projection_path"], manual)
+        write_json(artifacts["comparison_path"], comparison)
         with self.assertRaisesRegex(
-            ValueError, "canonical eligibility stage projection"
+            EligibilityContractError, "not the deterministic contract projection"
         ):
-            screening_store.validate_criteria(manual)
+            build_approval_receipt(
+                make_file_ref(str(self.protocol), "protocol_source"),
+                make_file_ref(str(self.locked_path), "canonical_contract"),
+                make_file_ref(str(artifacts["comparison_path"]), "projection_comparison"),
+                make_file_ref(str(artifacts["projection_path"]), "eligibility_projection"),
+                "Approve the hand-authored criteria.",
+                "RECORDED_NOT_INDEPENDENTLY_AUTHENTICATED",
+            )
 
     def test_cli_validate_lock_project_compare_approve_and_no_overwrite(
         self,
@@ -528,108 +522,6 @@ class EligibilityContractTests(unittest.TestCase):
                 ),
                 2,
             )
-    def test_full_text_fidelity_is_enforced_in_freeze_transaction(self) -> None:
-        artifacts = self._lock_and_artifacts("full_text")
-        database_path = self.root / "full_text.sqlite"
-        screening_store.cmd_init(
-            argparse.Namespace(
-                db=str(database_path),
-                review_id="SR-TEST",
-                screening_version="screening-1.0",
-                criteria=str(artifacts["projection_path"]),
-                criteria_source=str(self.locked_path),
-                reason="Initial version",
-            )
-        )
-        database = sqlite3.connect(database_path)
-        database.execute("PRAGMA foreign_keys = ON")
-        database.execute(
-            """
-            INSERT INTO corpus_studies(
-                screening_version, study_id, title, link_status, metadata_json
-            ) VALUES ('screening-1.0', 'S001', 'Fixture', 'resolved', '{}')
-            """
-        )
-        database.commit()
-        database.close()
-        screening_store.cmd_freeze_corpus(
-            argparse.Namespace(
-                db=str(database_path),
-                screening_version="screening-1.0",
-                approved_by="methods-reviewer",
-                reason="Corpus and criteria approved",
-                protocol_amendment_ref="",
-                canonical_contract=str(self.locked_path),
-                projection_comparison=str(artifacts["comparison_path"]),
-                approval_receipt=str(artifacts["receipt_path"]),
-            )
-        )
-        database = sqlite3.connect(database_path)
-        database.row_factory = sqlite3.Row
-        row = database.execute(
-            "SELECT status, eligibility_fidelity_json "
-            "FROM screening_versions WHERE screening_version = 'screening-1.0'"
-        ).fetchone()
-        database.close()
-        self.assertEqual(row["status"], "corpus_frozen")
-        fidelity = json.loads(row["eligibility_fidelity_json"])
-        self.assertEqual(fidelity["status"], "APPROVED_AT_FREEZE")
-        self.assertEqual(
-            fidelity["approval_receipt_hash"],
-            artifacts["receipt"]["receipt_hash"],
-        )
-
-    def test_failed_fidelity_freeze_rolls_back_to_draft(self) -> None:
-        artifacts = self._lock_and_artifacts("full_text")
-        invalid_receipt = deepcopy(artifacts["receipt"])
-        invalid_receipt["approver_assertion"] = "Tampered"
-        invalid_receipt_path = self.root / "invalid_approval.json"
-        write_json(invalid_receipt_path, invalid_receipt)
-        database_path = self.root / "rollback.sqlite"
-        screening_store.cmd_init(
-            argparse.Namespace(
-                db=str(database_path),
-                review_id="SR-TEST",
-                screening_version="screening-1.0",
-                criteria=str(artifacts["projection_path"]),
-                criteria_source=str(self.locked_path),
-                reason="Initial version",
-            )
-        )
-        database = sqlite3.connect(database_path)
-        database.execute(
-            """
-            INSERT INTO corpus_studies(
-                screening_version, study_id, title, link_status, metadata_json
-            ) VALUES ('screening-1.0', 'S001', 'Fixture', 'resolved', '{}')
-            """
-        )
-        database.commit()
-        database.close()
-        with self.assertRaisesRegex(
-            ValueError, "Eligibility fidelity approval failed"
-        ):
-            screening_store.cmd_freeze_corpus(
-                argparse.Namespace(
-                    db=str(database_path),
-                    screening_version="screening-1.0",
-                    approved_by="methods-reviewer",
-                    reason="Attempted freeze",
-                    protocol_amendment_ref="",
-                    canonical_contract=str(self.locked_path),
-                    projection_comparison=str(artifacts["comparison_path"]),
-                    approval_receipt=str(invalid_receipt_path),
-                )
-            )
-        database = sqlite3.connect(database_path)
-        row = database.execute(
-            "SELECT status, eligibility_fidelity_json "
-            "FROM screening_versions WHERE screening_version = 'screening-1.0'"
-        ).fetchone()
-        database.close()
-        self.assertEqual(row[0], "draft")
-        self.assertIsNone(row[1])
-
 
 if __name__ == "__main__":
     unittest.main()

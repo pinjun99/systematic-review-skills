@@ -40,9 +40,7 @@ cd Systematic_Review
 python3 .agents/run_tests.py
 ```
 
-The command runs every `test_*.py` module under `.agents/` except two modules
-that do not describe the lean tree. The reason is recorded in
-`.agents/run_tests.py`.
+The command runs every `test_*.py` module under `.agents/`.
 
 ## Changing a skill
 
