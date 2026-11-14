@@ -1,4 +1,17 @@
 #!/usr/bin/env python3
+# Copyright 2026 Ooi Pin Jun
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 from __future__ import annotations
 
@@ -30,6 +43,28 @@ def perfect_run(gold):
         }
         for case in gold
     ]
+
+
+class BaselineProvenanceTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.baseline = json.loads(
+            (SHARED / "references" / "v2-baseline.json").read_text(encoding="utf-8")
+        )
+
+    def test_baseline_contains_no_commit_hash(self):
+        self.assertNotRegex(json.dumps(self.baseline), r"\b[0-9a-fA-F]{40}\b")
+
+    def test_pending_model_benchmark_blocks_promotion(self):
+        self.assertEqual(
+            "PENDING_IDENTICAL_MODEL_RUN", self.baseline["model_benchmark_status"]
+        )
+        self.assertIs(self.baseline["promotion_allowed"], False)
+
+    def test_source_note_identifies_dated_snapshot(self):
+        self.assertIn("snapshot", self.baseline["baseline_source"].lower())
+        self.assertRegex(self.baseline["captured_on"], r"^\d{4}-\d{2}-\d{2}$")
+        self.assertIn(self.baseline["captured_on"], self.baseline["baseline_source"])
 
 
 class ScientificBenchmarkTests(unittest.TestCase):

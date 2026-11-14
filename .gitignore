@@ -12,6 +12,11 @@
 *.sqlite-wal
 *.sqlite-shm
 *.ris
+*.nbib
+*.ciw
+*.enw
+# Name EndNote XML exports *.endnote.xml; other XML files remain trackable.
+*.endnote.xml
 
 # Python local environments
 __pycache__/

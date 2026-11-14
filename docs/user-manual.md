@@ -191,7 +191,11 @@ review team can rerun.
 
 Database access, paywalled full texts, and official appraisal forms are the
 user's responsibility. Do not commit search exports, PDFs, or SQLite review
-databases.
+databases. These files can contain licensed records or personal data.
+`.gitignore` excludes RIS (`*.ris`), PubMed (`*.nbib`), Web of Science (`*.ciw`),
+and EndNote (`*.enw`, `*.endnote.xml`) exports. Name EndNote XML exports with
+the `.endnote.xml` suffix (for example, `search.endnote.xml`); ordinary `*.xml`
+files are not ignored.
 
 ## 11. Where to go next
 
