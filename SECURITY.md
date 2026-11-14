@@ -9,7 +9,7 @@
 ## Reporting a vulnerability
 
 Report a vulnerability privately through
-[GitHub Security Advisories](https://github.com/pinjun99/Systematic_Review/security/advisories/new).
+[GitHub Security Advisories](https://github.com/pinjun99/systematic-review-skills/security/advisories/new).
 
 Describe what you found, how to reproduce it, and which version you tested. Do
 not open a public issue for an unfixed vulnerability. Do not include access

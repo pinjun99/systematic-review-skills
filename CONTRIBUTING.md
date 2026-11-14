@@ -35,8 +35,8 @@ You need Python 3.12 (the version used in CI). The tests use the standard
 library only.
 
 ```bash
-git clone https://github.com/pinjun99/Systematic_Review.git
-cd Systematic_Review
+git clone https://github.com/pinjun99/systematic-review-skills.git
+cd systematic-review-skills
 python3 .agents/run_tests.py
 ```
 

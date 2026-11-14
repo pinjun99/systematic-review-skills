@@ -173,7 +173,7 @@ Skills*, version 0.1.0. Machine-readable metadata is in
   year    = {2026},
   version = {0.1.0},
   license = {Apache-2.0},
-  url     = {https://github.com/pinjun99/Systematic_Review}
+  url     = {https://github.com/pinjun99/systematic-review-skills}
 }
 ```
 
