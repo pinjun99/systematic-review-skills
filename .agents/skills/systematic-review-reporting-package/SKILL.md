@@ -27,6 +27,7 @@ description: Draft and reconcile a systematic-review manuscript, tables, figures
    and other meaning-bearing text before revision and verify them afterward.
 8. Reconcile all PRISMA counts, tables, figures, supplements, identifiers,
    declarations, funding, conflicts, authorship, registration, and AI disclosure.
+   Render the PRISMA flow figure from derived counts with `.agents/shared/prisma_flow.py`.
 9. Send the complete candidate package to independent QC. Resolve findings
    locally, regenerate only affected outputs, then prepare the final M5 subject.
 

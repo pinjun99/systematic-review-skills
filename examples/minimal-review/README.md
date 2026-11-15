@@ -69,3 +69,25 @@ this example or write an approval into the repository.
 For a real review, replace the invented content, complete the protocol with the
 protocol skill, and obtain M1 approval before search design. See the
 [user manual](../../docs/user-manual.md) and [CLI reference](../../docs/validators.md).
+
+## Fictional PRISMA figure
+
+`prisma_flow_counts.json` illustrates a possible flow ending in the single
+invented study and report. It is a renderer fixture, not progress or approval
+for this draft protocol. Its derived envelope and derivation rows are a
+synthetic snapshot with an empty `sources` list so the example is portable;
+it does not verify upstream review files. Real reviews must retain the
+source-backed output of `derive_prisma_counts` unchanged.
+
+From the repository root (Python 3.10+):
+
+```bash
+python3 .agents/shared/prisma_flow.py examples/minimal-review/prisma_flow_counts.json --format svg --output /tmp/fictional-prisma.svg
+python3 .agents/shared/prisma_flow.py examples/minimal-review/prisma_flow_counts.json --format mermaid
+python3 .agents/shared/prisma_flow.py examples/minimal-review/prisma_flow_counts.json --format text
+```
+
+Expected: exit 0; the first command writes the standalone SVG without stdout,
+and the others print a flowchart or summary with 12 records identified,
+10 screened, 4 reports sought, 3 assessed, and 1 included study/report.
+Place the Mermaid output inside a `mermaid` fenced code block for GitHub.

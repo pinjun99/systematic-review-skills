@@ -26,6 +26,7 @@ ROOT = Path(__file__).resolve().parents[3]
 SCRIPTS = {
     "v2_runtime.py", "v2_screening.py", "v2_corrections.py",
     "workspace_lifecycle.py", "audit_policy.py", "execution_control.py",
+    "prisma_flow.py",
 }
 
 
@@ -48,8 +49,9 @@ class ValidatorDocumentationTests(unittest.TestCase):
         for script, body in zip(names, sections[2::2]):
             with self.subTest(script=script):
                 help_text = self.help_text(script)
-                usage = help_text.split("\n\n", 1)[0]
-                choices = re.search(r"\{([^}]+)\}", usage)
+                # Only positional choices denote subcommands; option choices
+                # such as --format {mermaid,svg,text} do not.
+                choices = re.search(r"^  \{([^}]+)\}", help_text, re.M)
                 actual = set(choices.group(1).split(",")) if choices else set()
                 headings = re.findall(r"^### `([^`]+)`\s*$", body, re.M)
                 self.assertEqual(actual, set(headings))

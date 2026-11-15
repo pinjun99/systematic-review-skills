@@ -212,6 +212,10 @@ Please read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request,
 and the [Code of Conduct](CODE_OF_CONDUCT.md) in every community space. Report
 vulnerabilities privately, as described in [SECURITY.md](SECURITY.md).
 
+Render derived PRISMA flow counts as Mermaid, standalone SVG, or text with
+[prisma_flow.py](docs/validators.md#prisma_flowpy); the
+[minimal fictional review](examples/minimal-review/README.md) includes a runnable example.
+
 To extend the supported review types, see [adding a method module](docs/method-modules.md).
 
 Contributions are licensed under the Apache License, Version 2.0. Run
@@ -247,7 +251,7 @@ those terms. The licence is granted on an "AS IS" basis, without warranty.
 
 ```text
 .agents/skills/          coordinator and 14 phase skills
-.agents/shared/          validators, screening, corrections, and benchmarks
+.agents/shared/          validators, PRISMA renderer, screening, corrections, and benchmarks
 .agents/run_tests.py     standard-library test runner
 .github/workflows/       GitHub Actions test workflow
 docs/user-manual.md      operating instructions

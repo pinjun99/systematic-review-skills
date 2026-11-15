@@ -28,6 +28,21 @@ deterministic source of truth is `.agents/shared/v2_runtime.py`.
 `milestone_approval` contains `milestone_id`, `approved_by`, `approved_at`,
 `assertion`, and `subject_sha256`. Only M1–M5 are scheduled approvals.
 
+## PRISMA renderer input
+
+`.agents/shared/prisma_flow.py` accepts an object containing `flow_counts`,
+the unchanged derived envelope returned by `assurance_chain.derive_prisma_counts`:
+`schema_version`, `derived`, `counts`, `derivation`, `sources`, and
+`derivation_sha256`. `assurance_chain.verify_derived_prisma` owns its verification;
+a bare count dictionary is not a derived envelope.
+
+Optional sibling fields are `records_by_source` (an array of
+`{"source": "Databases", "count": 12}`) and `reports_excluded_reasons` (an array of
+`{"reason": "Wrong population", "count": 2}`). Their non-negative integer counts
+must sum to `records_identified` and `reports_excluded`, respectively. Use one
+primary reason per excluded report. Details and commands are in the
+[CLI reference](../../../../docs/validators.md#prisma_flowpy).
+
 ## Lifecycle
 
 - `READY`: validated and may progress without a scheduled approval.

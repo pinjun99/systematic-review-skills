@@ -247,3 +247,65 @@ results and prints `INGESTED N; outstanding M`.
 ```bash
 python3 .agents/shared/execution_control.py ingest --plan fanout.json --results results.jsonl --output applied.json
 ```
+
+## `prisma_flow.py`
+
+No subcommands. Python 3.10+ and the standard library are sufficient. Render
+a PRISMA 2020 flow diagram for a **new review using databases and registers
+only**, following the [PRISMA template](https://www.prisma-statement.org/prisma-2020-flow-diagram).
+Updated reviews and identification through other methods need a different template.
+
+```bash
+python3 .agents/shared/prisma_flow.py examples/minimal-review/prisma_flow_counts.json --format mermaid
+python3 .agents/shared/prisma_flow.py examples/minimal-review/prisma_flow_counts.json --format svg --output /tmp/fictional-prisma.svg
+python3 .agents/shared/prisma_flow.py examples/minimal-review/prisma_flow_counts.json --format text
+```
+
+The positional input is a JSON object with these fields:
+
+| Field | Shape and validation |
+| --- | --- |
+| `flow_counts` (required) | The unchanged object returned by `assurance_chain.derive_prisma_counts`: `schema_version: "2.0"`, `derived: true`, `counts`, `derivation`, `sources`, and `derivation_sha256`. Pass the whole envelope, not just `counts`. |
+| `records_by_source` (optional) | Array of `{"source": "Databases", "count": 12}` entries. Labels may name databases/registers individually or aggregate categories, without double counting. Counts must sum to `records_identified`. |
+| `reports_excluded_reasons` (optional) | Array of `{"reason": "Wrong population", "count": 2}` entries. Use one primary reason per excluded report; counts must sum to `reports_excluded`. |
+
+Breakdowns are siblings of `flow_counts`, outside its hash. Their labels must
+be non-empty strings containing valid XML characters; whitespace is normalized.
+Counts must be non-negative integers (not booleans). Input order is preserved.
+Absent breakdowns omit their detail lines; no source split, exclusion reason,
+or automation-removal count is inferred. The identified total is labeled
+“Databases and registers”; supplied source categories appear below it. The
+other-removals line appears only when its derived count is nonzero.
+
+`counts` contains all keys in `assurance_chain.FLOW_COUNT_KEYS`:
+`records_identified`, `duplicates_removed`, `records_removed_other_reasons`,
+`records_screened`, `records_excluded`, `reports_sought`, `reports_not_retrieved`,
+`reports_assessed`, `reports_excluded`, `reports_included`, and `studies_included`.
+The renderer delegates hash, source-file, and flow-identity validation to
+`verify_derived_prisma`; it does not recompute counts or change review artifacts.
+That verifier requires absolute paths for any source references present. Keep
+real derivations and source files intact. It verifies supplied references; it
+does not authenticate their authorship or require a nonempty source list.
+The bundled example is explicitly fictional and has no upstream references.
+
+The shared verifier checks these identities and names the failed count:
+
+- `records_screened = records_identified - duplicates_removed - records_removed_other_reasons`
+- `reports_sought = records_screened - records_excluded`
+- `reports_assessed = reports_sought - reports_not_retrieved`
+- `reports_included = reports_assessed - reports_excluded`
+- `studies_included <= reports_included`
+
+`--format` accepts `mermaid` (default), `svg`, or `text`. Success exits 0 and
+prints only the rendered content, or writes UTF-8 to `--output PATH` with no
+stdout, replacing an existing file. Parent directories must exist. Validation
+finishes before opening the output. Mermaid output is raw flowchart syntax;
+put it inside a `mermaid` fenced code block on GitHub. SVG is standalone with
+wrapped text, plain boxes/arrows, and Identification, Screening, and Included
+phases. All formats are deterministic, with no timestamps or external assets.
+
+Invalid JSON, invalid counts/provenance/breakdowns, or input/output failures
+exit **1**, emitting a single JSON object `{"error": "message"}` to stderr.
+Argument usage errors (including an unknown format) use argparse's normal
+stderr message and exit **2**. `--help` exits **0** without reading an input.
+Validation does not grant scientific approval.

@@ -1,0 +1,140 @@
+{
+  "fictional": true,
+  "note": "Illustrative count snapshot only; no upstream source files, real evidence, or approval. Do not use as a real review artifact.",
+  "flow_counts": {
+    "schema_version": "2.0",
+    "derived": true,
+    "counts": {
+      "records_identified": 12,
+      "duplicates_removed": 2,
+      "records_screened": 10,
+      "records_excluded": 6,
+      "reports_sought": 4,
+      "reports_not_retrieved": 1,
+      "reports_assessed": 3,
+      "reports_excluded": 2,
+      "reports_included": 1,
+      "studies_included": 1,
+      "records_removed_other_reasons": 0
+    },
+    "derivation": [
+      {
+        "count": "records_identified",
+        "source_role": "PHASE8_DEDUPLICATION",
+        "source_field": "records_imported",
+        "source_value": 12,
+        "adjustments": [],
+        "value": 12,
+        "rule": "PHASE8_DEDUPLICATION.records_imported"
+      },
+      {
+        "count": "duplicates_removed",
+        "source_role": "PHASE8_DEDUPLICATION",
+        "source_field": "duplicate_records_removed",
+        "source_value": 2,
+        "adjustments": [],
+        "value": 2,
+        "rule": "PHASE8_DEDUPLICATION.duplicate_records_removed"
+      },
+      {
+        "count": "records_screened",
+        "source_role": "PHASE9_SCREENING",
+        "source_field": "expected_phase8_records",
+        "source_value": 10,
+        "adjustments": [],
+        "value": 10,
+        "rule": "PHASE9_SCREENING.expected_phase8_records"
+      },
+      {
+        "count": "records_excluded",
+        "source_role": "PHASE9_SCREENING",
+        "source_field": "excluded_title_abstract",
+        "source_value": 6,
+        "adjustments": [],
+        "value": 6,
+        "rule": "PHASE9_SCREENING.excluded_title_abstract"
+      },
+      {
+        "count": "reports_sought",
+        "source_role": "PHASE9_SCREENING",
+        "source_field": "retained_for_full_text",
+        "source_value": 4,
+        "adjustments": [],
+        "value": 4,
+        "rule": "PHASE9_SCREENING.retained_for_full_text"
+      },
+      {
+        "count": "reports_not_retrieved",
+        "source_role": "PHASE10_RETRIEVAL",
+        "source_field": "reports_not_retrieved",
+        "source_value": 1,
+        "adjustments": [],
+        "value": 1,
+        "rule": "PHASE10_RETRIEVAL.reports_not_retrieved"
+      },
+      {
+        "count": "reports_assessed",
+        "source_role": "PHASE10_RETRIEVAL",
+        "source_field": "reports_assessed",
+        "source_value": 3,
+        "adjustments": [],
+        "value": 3,
+        "rule": "PHASE10_RETRIEVAL.reports_assessed"
+      },
+      {
+        "count": "reports_excluded",
+        "source_role": "PHASE10_SCREENING",
+        "source_field": "excluded_reports",
+        "source_value": 2,
+        "adjustments": [],
+        "value": 2,
+        "rule": "PHASE10_SCREENING.excluded_reports"
+      },
+      {
+        "count": "reports_included",
+        "source_role": "PHASE10_SCREENING",
+        "source_field": "included_reports",
+        "source_value": 1,
+        "adjustments": [],
+        "value": 1,
+        "rule": "PHASE10_SCREENING.included_reports"
+      },
+      {
+        "count": "studies_included",
+        "source_role": "PHASE10_SCREENING",
+        "source_field": "included_studies",
+        "source_value": 1,
+        "adjustments": [],
+        "value": 1,
+        "rule": "PHASE10_SCREENING.included_studies"
+      },
+      {
+        "count": "records_removed_other_reasons",
+        "source_role": "APPROVED_ADJUSTMENT",
+        "source_field": null,
+        "source_value": 0,
+        "adjustments": [],
+        "value": 0,
+        "rule": "approved adjustments only"
+      }
+    ],
+    "sources": [],
+    "derivation_sha256": "086fed93d88b5297c3f359a316762b67cbed98b6a2596acbe869923799c57a62"
+  },
+  "records_by_source": [
+    {
+      "source": "Databases",
+      "count": 12
+    }
+  ],
+  "reports_excluded_reasons": [
+    {
+      "reason": "Wrong classroom activity",
+      "count": 1
+    },
+    {
+      "reason": "No token-sorting outcome",
+      "count": 1
+    }
+  ]
+}

@@ -9,6 +9,10 @@ and this project uses [semantic versioning](https://semver.org/spec/v2.0.0.html)
 
 ### Added
 
+- A Python 3.10+ standard-library PRISMA 2020 flow renderer for Mermaid, SVG,
+  and text, reusing derived-count verification with optional source and
+  exclusion-reason breakdowns, a fictional example, and regression tests.
+
 - A Python 3.10+ standard-library installer at `.agents/install.py` for Codex,
   Claude Code, or both, with shared validators always at `.agents/shared/`.
 - Dry-run previews, conflict checks, explicit force replacement, and a versioned
@@ -17,6 +21,9 @@ and this project uses [semantic versioning](https://semver.org/spec/v2.0.0.html)
   and validator execution from a target project.
 
 ### Changed
+
+- Reporting step 8 now directs agents to render the PRISMA figure from derived
+  counts; the CLI reference documents its input, validation, and exit codes.
 
 - Installation and quick-start documentation now use the installer and explain
   native project skill discovery for both agents.
