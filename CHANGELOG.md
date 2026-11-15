@@ -5,6 +5,22 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project uses [semantic versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- A Python 3.10+ standard-library installer at `.agents/install.py` for Codex,
+  Claude Code, or both, with shared validators always at `.agents/shared/`.
+- Dry-run previews, conflict checks, explicit force replacement, and a versioned
+  file-hash manifest for upgrades that preserve local changes by default.
+- Installer regression tests covering layouts, conflicts, upgrades, frontmatter,
+  and validator execution from a target project.
+
+### Changed
+
+- Installation and quick-start documentation now use the installer and explain
+  native project skill discovery for both agents.
+
 ## [0.2.0] - 2026-11-14
 
 ### Added
@@ -58,5 +74,6 @@ First public release.
 - This release replaces the previous private licence. Public terms are the
   Apache License, Version 2.0. Copyright 2026 Ooi Pin Jun.
 
+[Unreleased]: https://github.com/pinjun99/systematic-review-skills/compare/v0.2.0...HEAD
 [0.2.0]: https://github.com/pinjun99/systematic-review-skills/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/pinjun99/systematic-review-skills/releases/tag/v0.1.0

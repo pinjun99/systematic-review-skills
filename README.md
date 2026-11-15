@@ -34,9 +34,9 @@ qualified professional.
 
 ## Quick start
 
-Clone this repository or copy its `.agents/skills/` folders into your project;
-keep `.agents/shared/` alongside them for the validators and shared references.
-Open the project in Codex and begin with the coordinator skill:
+Install the collection into your review project using the [installer](#install).
+Open that project in Codex, run from the project root, and begin with the
+coordinator skill:
 
 > Use `$systematic-review` to start a new review about `[topic]`. Create the
 > protocol and review configuration, ask me only for required scientific
@@ -54,26 +54,74 @@ You may also invoke a phase skill directly when its required inputs are ready:
 > `[workspace path]`. Prepare the final search strategies and stop for M2
 > approval. Do not execute the searches.
 
-The skills are Markdown instructions. They are written and tested for Codex.
-For Claude Code, ask it to read `.agents/skills/systematic-review/SKILL.md`
-and follow its links to the active phase. This manual-loading path is not
-covered by the test suite.
+For Claude Code, install with `--agent claude` or `--agent both`, open the
+target project, and use this prompt:
+
+> Use the systematic-review skill to start a new review about `[topic]`. Create
+> the protocol and review configuration, ask me only for required scientific
+> decisions, and stop for M1 approval before search design.
+
+For the other prompts above, replace `$systematic-review` (or the phase name)
+with “the systematic-review skill” (or the corresponding phase skill). The
+tests cover installation and validator execution, not agent review quality.
 
 Try the [minimal fictional review](examples/minimal-review/README.md) to validate
 the configuration and phase result locally before starting your own review.
 
 ## Install
 
-Clone this repository so its `.agents/skills/` directory is available inside
-your project. To use the collection across projects, copy the individual
-folders from `.agents/skills/` into your user-level skills directory.
+Clone this repository separately from your review project. From the checkout,
+run the installer with Python 3.10 or newer; no Python packages are required:
 
-The tests and validators use the Python 3.12 standard library. CI runs on
-Python 3.12.
+```bash
+git clone https://github.com/pinjun99/systematic-review-skills.git
+cd systematic-review-skills
+python3 .agents/install.py /path/to/review-project
+```
+
+The target project directory is created if needed. Choose an agent explicitly
+when needed:
+
+```bash
+python3 .agents/install.py /path/to/review-project --agent claude
+python3 .agents/install.py /path/to/review-project --agent both
+python3 .agents/install.py /path/to/review-project --agent both --dry-run
+```
+
+| Agent | Installed skill folders |
+|---|---|
+| `codex` (default) | `<project>/.agents/skills/systematic-review*/` |
+| `claude` | `<project>/.claude/skills/systematic-review*/` |
+| `both` | Both locations above |
+
+These are the project skill locations documented for
+[Codex](https://learn.chatgpt.com/docs/build-skills) and
+[Claude Code](https://code.claude.com/docs/en/skills). Every option also installs
+`.agents/shared/` in the target project so the validator paths in `SKILL.md`
+resolve from the project root. Shared tests, Python caches, and bytecode are
+excluded. Claude installs check skill names and descriptions for compatibility
+and report invalid frontmatter without changing the skill content.
+
+`--dry-run` prints the plan without writing anything. Existing different files
+block installation unless they match the hashes from a previous install.
+Review reported conflicts before using `--force` to replace local edits. The
+installer refuses to install into its own source repository.
+
+To upgrade, obtain the updated checkout and rerun the same install command.
+`.agents/shared/.systematic-review-skills.json` records the release version,
+installed paths, and file hashes. Keep it: unchanged files can then be upgraded
+without `--force`, and obsolete unchanged files are removed. Modified obsolete
+files also require `--force` before removal. Untracked files and skills for an
+agent not selected on that run are retained. The shared runtime is updated on
+every run.
+
+The installer, tests, and validators use the Python standard library. CI runs
+on Python 3.12.
 
 ## Validate
 
-After installing or changing the collection, run:
+From the source checkout, run the tests after changing the collection
+(the installer does not copy the test suite into your review project):
 
 ```bash
 python3 .agents/run_tests.py

@@ -5,11 +5,26 @@ compact input/output table, see [Outputs by step](pipeline-map.md).
 
 ## 1. Start a review
 
-Open the repository in Codex and invoke the coordinator by name:
+First [install the collection](../README.md#install) into your review project.
+From the source checkout, use `python3 .agents/install.py /path/to/review-project`
+for Codex, or add `--agent claude` or `--agent both`. The installer requires
+Python 3.10 or newer. Preview with `--dry-run`; rerun the command to upgrade.
+It reports local changes and requires `--force` to overwrite them. Keep the
+manifest at `.agents/shared/.systematic-review-skills.json` for future upgrades.
+
+Open the target project in Codex and invoke the coordinator by name. Run from
+the project root so `.agents/shared/` validator paths resolve:
 
 > Use `$systematic-review` to start a systematic review about `[topic]`.
 > Identify the appropriate review type, create the protocol and review
 > configuration, ask me for required decisions, and stop for M1 approval.
+
+In Claude Code, open the target project after installing with `--agent claude`
+or `--agent both`. Ask: “Use the systematic-review skill to start a systematic
+review about `[topic]`.” Include the same protocol and M1 instructions above.
+For the Codex prompts below, replace `$[skill-name]` with “the [skill-name]
+skill”. Claude discovers the installed skills under `.claude/skills/`; both
+agents use the shared validators under `.agents/shared/`.
 
 The coordinator selects one or more active method modules:
 
