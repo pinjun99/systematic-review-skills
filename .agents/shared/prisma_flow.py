@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Render derived PRISMA 2020 counts for new database/register reviews."""
+"""Render PRISMA 2020 flow counts for new reviews."""
 
 from __future__ import annotations
 
@@ -28,13 +28,18 @@ from assurance_chain import verify_derived_prisma
 
 
 FORMATS = ("mermaid", "svg", "text")
+OTHER_HEADING = "Identification of studies via other methods"
+MAIN_HEADING = "Identification of studies via databases and registers"
+Row = tuple[str, list[str], list[str] | None]
+OtherRows = dict[int, tuple[list[str], list[str] | None]]
 
 
 def _breakdown(document: dict[str, Any], name: str, label: str,
-               total: int, identity: str) -> list[tuple[str, int]] | None:
+               total: int | None, identity: str, *, prefix: str = "") -> list[tuple[str, int]] | None:
     if name not in document:
         return None
     entries = document[name]
+    name = prefix + name
     if not isinstance(entries, list):
         raise ValueError(f"{name} must be an array")
     result = []
@@ -54,12 +59,54 @@ def _breakdown(document: dict[str, Any], name: str, label: str,
         if isinstance(count, bool) or not isinstance(count, int) or count < 0:
             raise ValueError(f"{where}.count must be a non-negative integer")
         result.append((" ".join(value.split()), count))
-    if sum(count for _, count in result) != total:
+    if total is not None and sum(count for _, count in result) != total:
         raise ValueError(f"PRISMA sum({name}.count) != {identity} ({total})")
     return result
 
 
-def _rows(document: Any) -> list[tuple[str, list[str], list[str] | None]]:
+def _other_rows(block: Any, main: dict[str, int]) -> tuple[OtherRows, list[str]]:
+    if not isinstance(block, dict):
+        raise ValueError("other_methods must be an object")
+    counts = {}
+    for key in ("reports_sought", "reports_not_retrieved", "reports_assessed",
+                "reports_excluded", "reports_included", "studies_included"):
+        value = block.get(key)
+        if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+            raise ValueError(f"other_methods.{key} must be a non-negative integer")
+        counts[key] = value
+    if counts["reports_assessed"] != counts["reports_sought"] - counts["reports_not_retrieved"]:
+        raise ValueError("other_methods.reports_assessed must equal reports_sought - reports_not_retrieved")
+    if counts["reports_included"] != counts["reports_assessed"] - counts["reports_excluded"]:
+        raise ValueError("other_methods.reports_included must equal reports_assessed - reports_excluded")
+    if counts["studies_included"] > counts["reports_included"]:
+        raise ValueError("other_methods.studies_included cannot exceed reports_included")
+
+    sources = _breakdown(block, "records_by_source", "source", None, "", prefix="other_methods.")
+    if sources is None:
+        raise ValueError("other_methods.records_by_source must be an array")
+    reasons = _breakdown(block, "reports_excluded_reasons", "reason", counts["reports_excluded"],
+                         "reports_excluded", prefix="other_methods.")
+    if reasons is None:
+        raise ValueError("other_methods.reports_excluded_reasons must be an array")
+
+    def label(text: str, key: str) -> str:
+        return f"{text} (n = {counts[key]})"
+
+    return {
+        0: ([OTHER_HEADING, "Records identified from:",
+             *(f"{source} (n = {count})" for source, count in sources)], None),
+        2: ([label("Reports sought for retrieval", "reports_sought")],
+            [label("Reports not retrieved", "reports_not_retrieved")]),
+        3: ([label("Reports assessed for eligibility", "reports_assessed")],
+            [label("Reports excluded:", "reports_excluded"),
+             *(f"{reason} (n = {count})" for reason, count in reasons)]),
+    }, [
+        f"Studies included in review (n = {main['studies_included'] + counts['studies_included']})",
+        f"Reports of included studies (n = {main['reports_included'] + counts['reports_included']})",
+    ]
+
+
+def _rows(document: Any) -> tuple[list[Row], OtherRows]:
     if not isinstance(document, dict):
         raise ValueError("input must be an object containing flow_counts")
     block = document.get("flow_counts")
@@ -89,6 +136,12 @@ def _rows(document: Any) -> list[tuple[str, list[str], list[str] | None]]:
     excluded = [label("Reports excluded:", "reports_excluded")]
     if reasons:
         excluded.extend(f"{reason} (n = {count})" for reason, count in reasons)
+    included = [label("Studies included in review", "studies_included"),
+                label("Reports of included studies", "reports_included")]
+    other = {}
+    if "other_methods" in document:
+        other, included = _other_rows(document["other_methods"], counts)
+        identified.insert(0, MAIN_HEADING)
     return [
         ("Identification", identified, removed),
         ("Screening", [label("Records screened", "records_screened")],
@@ -97,9 +150,8 @@ def _rows(document: Any) -> list[tuple[str, list[str], list[str] | None]]:
          [label("Reports not retrieved", "reports_not_retrieved")]),
         ("Screening", [label("Reports assessed for eligibility", "reports_assessed")],
          excluded),
-        ("Included", [label("Studies included in review", "studies_included"),
-                      label("Reports of included studies", "reports_included")], None),
-    ]
+        ("Included", included, None),
+    ], other
 
 
 def _mermaid_text(value: str) -> str:
@@ -109,14 +161,15 @@ def _mermaid_text(value: str) -> str:
                    for c in value)
 
 
-def _mermaid(rows: list) -> str:
+def _mermaid(rows: list[Row], other: OtherRows) -> str:
     lines = ["flowchart TB"]
     for phase in ("Identification", "Screening", "Included"):
         lines.append(f'  subgraph {phase.lower()}["{phase}"]')
         for index, (row_phase, left, right) in enumerate(rows):
             if row_phase != phase:
                 continue
-            for side, label in (("L", left), ("R", right)):
+            other_left, other_right = other.get(index, (None, None))
+            for side, label in (("L", left), ("R", right), ("O", other_left), ("X", other_right)):
                 if label is not None:
                     value = "<br/>".join(_mermaid_text(part) for part in label)
                     lines.append(f'    {side}{index}["{value}"]')
@@ -126,29 +179,39 @@ def _mermaid(rows: list) -> str:
             lines.append(f"  L{index - 1} --> L{index}")
         if right is not None:
             lines.append(f"  L{index} --> R{index}")
+    if other:
+        indices = list(other)
+        for source, target in zip(indices, indices[1:]):
+            lines.append(f"  O{source} --> O{target}")
+        for index, (_, excluded) in other.items():
+            if excluded is not None:
+                lines.append(f"  O{index} --> X{index}")
+        lines.append(f"  O{indices[-1]} --> L{len(rows) - 1}")
     return "\n".join(lines) + "\n"
 
 
-def _svg(rows: list) -> str:
+def _svg(rows: list[Row], other: OtherRows) -> str:
     layout = []
+    width = 2140 if other else 1100
     y = 50
-    for phase, left, right in rows:
+    for index, (phase, left, right) in enumerate(rows):
+        other_left, other_right = other.get(index, (None, None))
         wrapped = [[line for part in label for line in textwrap.wrap(part, 46)]
-                   if label is not None else None for label in (left, right)]
+                   if label is not None else None for label in (left, right, other_left, other_right)]
         height = max(140 if phase == "Identification" else 80,
                      max(len(label or []) for label in wrapped) * 20 + 32)
         layout.append((phase, y, height, *wrapped))
         y += height + 48
     lines = [
-        f'<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="{y}" '
-        f'viewBox="0 0 1100 {y}" role="img" aria-labelledby="title description">',
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{y}" '
+        f'viewBox="0 0 {width} {y}" role="img" aria-labelledby="title description">',
         '<title id="title">PRISMA 2020 flow diagram</title>',
         '<desc id="description">Identification, screening, and inclusion of studies '
         'in a new systematic review.</desc>',
         '<defs><marker id="arrow" viewBox="0 0 10 10" refX="10" refY="5" '
         'markerWidth="7" markerHeight="7" orient="auto-start-reverse">'
         '<path d="M 0 0 L 10 5 L 0 10 z" fill="#222"/></marker></defs>',
-        f'<rect width="1100" height="{y}" fill="white"/>',
+        f'<rect width="{width}" height="{y}" fill="white"/>',
     ]
     for phase in ("Identification", "Screening", "Included"):
         group = [row for row in layout if row[0] == phase]
@@ -162,8 +225,9 @@ def _svg(rows: list) -> str:
             f'font-family="sans-serif" font-size="16" '
             f'transform="rotate(-90 60 {middle})">{phase}</text>',
         ])
-    for index, (_, top, height, left, right) in enumerate(layout):
-        for x, label in ((140, left), (660, right)):
+    previous_other_bottom = None
+    for index, (_, top, height, left, right, other_left, other_right) in enumerate(layout):
+        for x, label in ((140, left), (660, right), (1180, other_left), (1700, other_right)):
             if label is None:
                 continue
             lines.append(f'<rect x="{x}" y="{top}" width="420" height="{height}" '
@@ -181,6 +245,18 @@ def _svg(rows: list) -> str:
             start = previous[1] + previous[2]
             lines.append(f'<path d="M 350 {start} V {top}" fill="none" '
                          'stroke="#222" marker-end="url(#arrow)"/>')
+        if other_right is not None:
+            middle = top + height / 2
+            lines.append(f'<path d="M 1600 {middle} H 1700" fill="none" '
+                         'stroke="#222" marker-end="url(#arrow)"/>')
+        if other_left is not None:
+            if previous_other_bottom is not None:
+                lines.append(f'<path d="M 1390 {previous_other_bottom} V {top}" fill="none" '
+                             'stroke="#222" marker-end="url(#arrow)"/>')
+            previous_other_bottom = top + height
+        if other and index == len(rows) - 1:
+            lines.append(f'<path d="M 1390 {previous_other_bottom} V {top - 24} H 470 V {top}" fill="none" '
+                         'stroke="#222" marker-end="url(#arrow)"/>')
     lines.append('</svg>')
     return "\n".join(lines) + "\n"
 
@@ -189,11 +265,23 @@ def render(document: Any, format: str = "mermaid") -> str:
     """Validate the derived block and optional breakdowns before rendering."""
     if format not in FORMATS:
         raise ValueError(f"unsupported format: {format}")
-    rows = _rows(document)
+    rows, other = _rows(document)
     if format == "mermaid":
-        return _mermaid(rows)
+        return _mermaid(rows, other)
     if format == "svg":
-        return _svg(rows)
+        return _svg(rows, other)
+    if other:
+        lines = ["Identification", *rows[0][1], *(rows[0][2] or []), "",
+                 "Screening"]
+        for _, left, right in rows[1:-1]:
+            lines.extend(left)
+            lines.extend(right or [])
+        lines.append("")
+        for left, right in other.values():
+            lines.extend(left)
+            lines.extend(right or [])
+        lines.extend(("", "Included", *rows[-1][1]))
+        return "\n".join(lines) + "\n"
     lines = []
     previous = None
     for phase, left, right in rows:

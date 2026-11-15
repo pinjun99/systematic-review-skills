@@ -15,6 +15,7 @@
 """Exercise PRISMA rendering with generated, source-backed flow counts."""
 
 import copy
+from hashlib import sha256
 import json
 from pathlib import Path
 import subprocess
@@ -77,6 +78,21 @@ class PrismaFlowTests(unittest.TestCase):
         block["derivation_sha256"] = canonical_json_sha256(
             {key: value for key, value in block.items() if key != "derivation_sha256"})
 
+    def with_other_methods(self):
+        document = self.with_breakdowns()
+        document["other_methods"] = {
+            "records_by_source": [{"source": "Websites", "count": 4},
+                                  {"source": "Citation searching", "count": 3}],
+            "reports_sought": 6,
+            "reports_not_retrieved": 1,
+            "reports_assessed": 5,
+            "reports_excluded": 2,
+            "reports_excluded_reasons": [{"reason": "Wrong population", "count": 2}],
+            "reports_included": 3,
+            "studies_included": 2,
+        }
+        return document
+
     def cli(self, *args):
         return subprocess.run([sys.executable, str(SHARED / "prisma_flow.py"),
                                *map(str, args)], cwd=ROOT,
@@ -137,6 +153,50 @@ class PrismaFlowTests(unittest.TestCase):
             self.assertNotIn("Registers (n =", result)
             self.assertNotIn("automation", result)
             self.assertNotIn("Reason 1", result)
+
+    def test_legacy_output_is_byte_identical(self):
+        expected = {
+            "mermaid": "1c08d9d6e54e0eb8df07d8475e582956196af2228e2255357209cf1ae47e9a3b",
+            "svg": "05d4f5ebe547cb2420ef376c9a8c54363d7de4b5f79b6c010fe9b86358624a8d",
+            "text": "7782cdc7665292e0eeaaaf3284b647692116994c9c3b74827230073a12ab4a38",
+        }
+        for format, digest in expected.items():
+            with self.subTest(format=format):
+                self.assertEqual(digest, sha256(render(self.with_breakdowns(), format).encode()).hexdigest())
+
+    def test_other_methods_render_in_each_format(self):
+        document = self.with_other_methods()
+        original = copy.deepcopy(document)
+        for format in FORMATS:
+            with self.subTest(format=format):
+                rendered = render(document, format)
+                visible = " ".join(ET.fromstring(rendered).itertext()) if format == "svg" else rendered
+                for expected in (
+                    "Identification of studies via other methods", "Websites (n = 4)",
+                    "Citation searching (n = 3)", "Reports sought for retrieval (n = 6)",
+                    "Reports not retrieved (n = 1)", "Reports assessed for eligibility (n = 5)",
+                    "Wrong population (n = 2)", "Studies included in review (n = 11)",
+                    "Reports of included studies (n = 14)",
+                ):
+                    self.assertIn(expected, visible)
+                if format == "mermaid":
+                    self.assertIn("O3 --> L4", rendered)
+        self.assertEqual(original, document)
+
+    def test_other_methods_names_failed_equations(self):
+        for key, value, identity in (
+            ("reports_not_retrieved", 2, r"other_methods\.reports_assessed"),
+            ("reports_included", 2, r"other_methods\.reports_included"),
+            ("studies_included", 4, r"other_methods\.studies_included"),
+            ("reports_excluded_reasons", [], r"other_methods\.reports_excluded_reasons"),
+            ("reports_sought", True, r"other_methods\.reports_sought"),
+        ):
+            document = self.with_other_methods()
+            document["other_methods"][key] = value
+            for format in FORMATS:
+                with self.subTest(key=key, format=format):
+                    with self.assertRaisesRegex(ValueError, identity):
+                        render(document, format)
 
     def test_each_broken_identity_is_named(self):
         cases = (

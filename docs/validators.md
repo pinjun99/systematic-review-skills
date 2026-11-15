@@ -251,9 +251,9 @@ python3 .agents/shared/execution_control.py ingest --plan fanout.json --results 
 ## `prisma_flow.py`
 
 No subcommands. Python 3.10+ and the standard library are sufficient. Render
-a PRISMA 2020 flow diagram for a **new review using databases and registers
-only**, following the [PRISMA template](https://www.prisma-statement.org/prisma-2020-flow-diagram).
-Updated reviews and identification through other methods need a different template.
+a PRISMA 2020 flow diagram for a **new review** using databases and registers,
+with an optional second pathway for other methods. Updated reviews use a separate
+[PRISMA template](https://www.prisma-statement.org/prisma-2020-flow-diagram).
 
 ```bash
 python3 .agents/shared/prisma_flow.py examples/minimal-review/prisma_flow_counts.json --format mermaid
@@ -295,6 +295,41 @@ The shared verifier checks these identities and names the failed count:
 - `reports_assessed = reports_sought - reports_not_retrieved`
 - `reports_included = reports_assessed - reports_excluded`
 - `studies_included <= reports_included`
+
+If the review also searched websites, organisations, citations, or other
+sources, add an `other_methods` object alongside `flow_counts`. Here is a
+fictional block:
+
+```json
+{
+  "other_methods": {
+    "records_by_source": [
+      {"source": "Websites", "count": 4},
+      {"source": "Citation searching", "count": 3}
+    ],
+    "reports_sought": 6,
+    "reports_not_retrieved": 1,
+    "reports_assessed": 5,
+    "reports_excluded": 2,
+    "reports_excluded_reasons": [{"reason": "Wrong population", "count": 2}],
+    "reports_included": 3,
+    "studies_included": 2
+  }
+}
+```
+
+All displayed counts are non-negative integers. The renderer requires
+`reports_assessed = reports_sought - reports_not_retrieved`,
+`reports_included = reports_assessed - reports_excluded`, and
+`studies_included <= reports_included`. The exclusion reasons must add up
+to `reports_excluded`. Reports that could not be retrieved belong in
+`reports_not_retrieved`.
+
+Keep database and register counts in `flow_counts`. Count each included
+report only once across both paths, and supply only additional unique studies
+in `other_methods.studies_included`. The final box adds the two included-report
+and study counts. The renderer checks the arithmetic of `other_methods`
+without verifying its provenance or deduplicating counted reports and studies.
 
 `--format` accepts `mermaid` (default), `svg`, or `text`. Success exits 0 and
 prints only the rendered content, or writes UTF-8 to `--output PATH` with no

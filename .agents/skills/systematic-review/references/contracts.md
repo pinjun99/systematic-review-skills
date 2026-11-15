@@ -40,8 +40,18 @@ Optional sibling fields are `records_by_source` (an array of
 `{"source": "Databases", "count": 12}`) and `reports_excluded_reasons` (an array of
 `{"reason": "Wrong population", "count": 2}`). Their non-negative integer counts
 must sum to `records_identified` and `reports_excluded`, respectively. Use one
-primary reason per excluded report. Details and commands are in the
-[CLI reference](../../../../docs/validators.md#prisma_flowpy).
+primary reason per excluded report.
+
+For new reviews with other identification methods, add an optional sibling
+`other_methods` object. It takes `records_by_source`, `reports_sought`,
+`reports_not_retrieved`, `reports_assessed`, `reports_excluded`,
+`reports_excluded_reasons`, `reports_included`, and `studies_included`.
+Keep the database and register counts in the unchanged `flow_counts` envelope.
+Count each included report once across the two paths, and count only additional
+unique studies in `other_methods.studies_included`. The renderer checks the
+other-methods arithmetic and combines the supplied inclusion totals. It cannot
+deduplicate the input or verify provenance for the optional block. See the
+[CLI reference](../../../../docs/validators.md#prisma_flowpy) for an example.
 
 ## Lifecycle
 
