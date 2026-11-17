@@ -192,7 +192,7 @@ covers all shared command-line tools and their limits.
 
 ## 10. Limits of this release
 
-Version 0.1.0 is an early release. A person approves M1–M5 and every
+Version 0.3.0 is an early release. A person approves M1–M5 and every
 consequential exception. The skills do not replace a review team, an
 information specialist, or a statistician, and they do not provide medical
 advice.

@@ -10,7 +10,7 @@ The maintainer is Ooi Pin Jun, a pharmacist and researcher
 
 ## Status
 
-**Early stage, version 0.2.0.** The skills, validators, and automated tests
+**Early stage, version 0.3.0.** The skills, validators, and automated tests
 are in place. The scientific release benchmark has not been run on paired
 model executions, so this suite is not yet a validated substitute for an
 experienced review team. See [limitations](#limitations).
@@ -225,7 +225,7 @@ eligibility or synthesis methods because of an observed result.
 ## Citation
 
 If you use this software, please cite Ooi Pin Jun (2026), *Systematic Review
-Skills*, version 0.1.0. Machine-readable metadata is in
+Skills*, version 0.3.0. Machine-readable metadata is in
 [CITATION.cff](CITATION.cff).
 
 ```bibtex
@@ -233,7 +233,7 @@ Skills*, version 0.1.0. Machine-readable metadata is in
   author  = {Ooi, Pin Jun},
   title   = {Systematic Review Skills},
   year    = {2026},
-  version = {0.2.0},
+  version = {0.3.0},
   license = {Apache-2.0},
   url     = {https://github.com/pinjun99/systematic-review-skills}
 }
