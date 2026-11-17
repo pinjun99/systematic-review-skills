@@ -7,6 +7,13 @@ and this project uses [semantic versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+### Added
+
+- `--uninstall` on `.agents/install.py` removes a previous install from its
+  manifest, keeping edited files unless `--force` is given, leaving unrelated
+  files alone, and deleting empty installer directories. `--dry-run` prints
+  the plan without changing anything (#21).
+
 ## [0.3.0] - 2026-11-18
 
 ### Added

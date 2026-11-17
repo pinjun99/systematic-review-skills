@@ -221,15 +221,95 @@ def install(project: Path, agent: str, dry_run: bool, force: bool) -> None:
         print("Claude Code prompt: Use the systematic-review skill to start a review about [topic].")
 
 
+def planned_empty_dirs(project: Path, removed: set[str]) -> list[str]:
+    """Directories that would be empty after *removed* paths are deleted."""
+    candidates = set()
+    for relative in removed:
+        for parent in PurePosixPath(relative).parents:
+            if parent.as_posix() == ".":
+                break
+            candidates.add(parent.as_posix())
+    empty: list[str] = []
+    known = set()
+    for relative in sorted(candidates, key=lambda item: len(PurePosixPath(item).parts), reverse=True):
+        directory = project / relative
+        if directory.is_symlink() or not directory.is_dir():
+            continue
+        leftover = False
+        for child in directory.iterdir():
+            child_relative = child.relative_to(project).as_posix()
+            if child_relative in removed or child_relative in known:
+                continue
+            leftover = True
+            break
+        if not leftover:
+            empty.append(relative)
+            known.add(relative)
+    return empty
+
+
+def uninstall(project: Path, dry_run: bool, force: bool) -> None:
+    project = project.expanduser().resolve()
+    if project == ROOT:
+        raise ValueError("Refusing to uninstall from the source repository itself")
+    manifest_path = checked_target(project, MANIFEST)
+    if not manifest_path.exists():
+        raise ValueError(f"No install manifest found at {MANIFEST}")
+    previous = previous_install(project)
+
+    removes: list[str] = []
+    keeps: list[str] = []
+    forced: set[str] = set()
+    for relative in sorted(previous):
+        target = checked_target(project, relative)
+        current = digest(target) if target.exists() else None
+        if current is None:
+            continue
+        if current == previous[relative]:
+            removes.append(relative)
+        elif force:
+            forced.add(relative)
+            removes.append(relative)
+        else:
+            keeps.append(relative)
+
+    directories = planned_empty_dirs(project, set(removes) | {MANIFEST})
+    prefix = "WOULD " if dry_run else ""
+    for relative in removes:
+        if relative in forced:
+            print(f"FORCE user-modified file: {relative}")
+        print(f"{prefix}REMOVE {relative}")
+    for relative in keeps:
+        print(f"{prefix}KEEP user-modified file: {relative}")
+    print(f"{prefix}REMOVE {MANIFEST}")
+    for directory in directories:
+        print(f"{prefix}REMOVE {directory}/")
+    if not dry_run:
+        for relative in removes:
+            (project / relative).unlink()
+        manifest_path.unlink()
+        for directory in directories:
+            (project / directory).rmdir()
+    label = "Dry run" if dry_run else "Uninstalled"
+    print(f"{label}: removed={len(removes) + 1}, kept={len(keeps)}, "
+          f"directories={len(directories)}")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("project_dir", type=Path)
     parser.add_argument("--agent", choices=("codex", "claude", "both"), default="codex")
+    parser.add_argument("--uninstall", action="store_true",
+                        help="Remove a previous install using its manifest")
     parser.add_argument("--dry-run", action="store_true", help="Show the plan without writing files")
-    parser.add_argument("--force", action="store_true", help="Replace conflicting files, including local edits")
+    parser.add_argument("--force", action="store_true",
+                        help="Replace conflicting files, including local edits")
     args = parser.parse_args()
     try:
-        install(args.project_dir, args.agent, args.dry_run, args.force)
+        if args.uninstall:
+            uninstall(args.project_dir, args.dry_run, args.force)
+        else:
+            install(args.project_dir, args.agent, args.dry_run, args.force)
     except (OSError, ValueError) as exc:
         print(f"Install error: {exc}", file=sys.stderr)
         return 1

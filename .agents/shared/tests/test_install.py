@@ -253,6 +253,70 @@ class InstallTests(unittest.TestCase):
         self.assertIn("not a directory", result.stderr)
         self.assertEqual("keep", (self.project / ".agents").read_text())
 
+    def test_uninstall_removes_installed_files(self):
+        self.run_install("--agent", "both")
+        installed = set(self.snapshot())
+        self.assertIn(MANIFEST, installed)
+        result = self.run_install("--uninstall")
+        self.assertFalse(set(self.snapshot()) & installed)
+        self.assertFalse((self.project / MANIFEST).exists())
+        self.assertTrue(self.project.exists())
+        self.assertIn("REMOVE " + MANIFEST, result.stdout)
+        self.assertIn("Uninstalled:", result.stdout)
+
+    def test_uninstall_keeps_edited_file_without_force(self):
+        self.run_install()
+        target = self.project / RUNTIME
+        target.write_text("local edit", encoding="utf-8")
+        result = self.run_install("--uninstall")
+        self.assertEqual("local edit", target.read_text(encoding="utf-8"))
+        self.assertFalse((self.project / MANIFEST).exists())
+        self.assertFalse((self.project / ".agents/skills" / SKILL).exists())
+        self.assertIn("KEEP user-modified file: " + RUNTIME, result.stdout)
+        self.run_install("--force")
+        (self.project / RUNTIME).write_text("local edit", encoding="utf-8")
+        forced = self.run_install("--uninstall", "--force")
+        self.assertFalse((self.project / RUNTIME).exists())
+        self.assertFalse((self.project / MANIFEST).exists())
+        self.assertIn("FORCE user-modified file: " + RUNTIME, forced.stdout)
+
+    def test_uninstall_preserves_unrelated_file(self):
+        self.run_install()
+        unrelated = self.project / ".agents/skills/local.txt"
+        unrelated.write_text("keep me", encoding="utf-8")
+        self.run_install("--uninstall")
+        self.assertEqual("keep me", unrelated.read_text(encoding="utf-8"))
+        self.assertTrue(unrelated.parent.is_dir())
+        self.assertFalse((self.project / MANIFEST).exists())
+        self.assertFalse((self.project / ".agents/skills" / SKILL).exists())
+
+    def test_uninstall_dry_run_writes_nothing(self):
+        self.run_install("--agent", "both")
+        before = self.snapshot()
+        result = self.run_install("--uninstall", "--dry-run")
+        self.assertEqual(before, self.snapshot())
+        self.assertIn("WOULD REMOVE " + MANIFEST, result.stdout)
+        self.assertIn("Dry run:", result.stdout)
+        self.assertNotIn("\nREMOVE ", "\n" + result.stdout)
+
+    def test_uninstall_missing_manifest_is_refused(self):
+        leftover = self.project / "keep.txt"
+        leftover.parent.mkdir(parents=True)
+        leftover.write_text("safe", encoding="utf-8")
+        before = self.snapshot()
+        result = self.run_install("--uninstall", success=False)
+        self.assertIn("No install manifest found", result.stderr)
+        self.assertEqual(before, self.snapshot())
+        self.assertEqual("safe", leftover.read_text(encoding="utf-8"))
+        dry = self.run_install("--uninstall", "--dry-run", success=False)
+        self.assertIn("No install manifest found", dry.stderr)
+        self.assertEqual(before, self.snapshot())
+
+    def test_uninstall_refuses_source_repository(self):
+        result = self.run_install("--uninstall", project=ROOT, success=False)
+        self.assertIn("source repository itself", result.stderr)
+
+
 
 if __name__ == "__main__":
     unittest.main()

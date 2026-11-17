@@ -115,6 +115,18 @@ files also require `--force` before removal. Untracked files and skills for an
 agent not selected on that run are retained. The shared runtime is updated on
 every run.
 
+To uninstall, run the installer with `--uninstall`. Only files listed in the
+manifest whose hashes still match are removed. Edited files are listed and
+kept unless you pass `--force`. Files you added yourself are left alone, and
+empty directories the installer created are removed. `--dry-run` prints the
+plan without changing anything:
+
+```bash
+python3 .agents/install.py /path/to/review-project --uninstall --dry-run
+python3 .agents/install.py /path/to/review-project --uninstall
+python3 .agents/install.py /path/to/review-project --uninstall --force
+```
+
 The installer, tests, and validators use the Python standard library. CI runs
 on Python 3.12.
 
