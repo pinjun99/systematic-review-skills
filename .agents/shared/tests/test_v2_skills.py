@@ -26,11 +26,23 @@ SKILL_FILES = sorted(SKILLS.glob("systematic-review*/SKILL.md"))
 
 
 def frontmatter_name(text: str) -> str | None:
-    """Return the name from the opening YAML frontmatter block, if present."""
+    """Return the name from a closed opening YAML frontmatter block, if present.
+
+    A closing delimiter must be exactly ``---`` on its own line; a line such as
+    ``----`` is not a closer. A whitespace-separated inline YAML comment after
+    the value is allowed, but a name written only in the body is not.
+    """
     if not text.startswith("---\n"):
         return None
-    frontmatter = text.split("\n---", 1)[0]
-    match = re.search(r"^name:\s*(\S+)\s*$", frontmatter, re.MULTILINE)
+    lines = text.split("\n")
+    closing = next(
+        (index for index, line in enumerate(lines[1:], start=1) if line.rstrip("\r") == "---"),
+        None,
+    )
+    if closing is None:
+        return None
+    frontmatter = "\n".join(lines[1:closing])
+    match = re.search(r"^name:\s*([^\s#]+)(?:\s+#[^\n]*)?\s*$", frontmatter, re.MULTILINE)
     return match.group(1) if match else None
 
 
@@ -103,11 +115,32 @@ class SkillStructureTests(unittest.TestCase):
         )
         self.assertIsNone(frontmatter_name(text))
 
-    def test_frontmatter_name_with_trailing_comment_is_not_accepted(self):
+    def test_frontmatter_name_with_inline_comment_wins_over_body(self):
         text = (
             "---\n"
             "name: systematic-review-protocol # renamed\n"
             "---\n"
+            "\n"
+            "# Body\n"
+            "name: systematic-review\n"
+        )
+        self.assertEqual("systematic-review-protocol", frontmatter_name(text))
+
+    def test_frontmatter_name_requires_a_closing_delimiter(self):
+        text = (
+            "---\n"
+            "name: systematic-review-protocol\n"
+            "\n"
+            "# Body\n"
+            "name: systematic-review\n"
+        )
+        self.assertIsNone(frontmatter_name(text))
+
+    def test_four_dashes_do_not_close_frontmatter(self):
+        text = (
+            "---\n"
+            "name: systematic-review-protocol\n"
+            "----\n"
             "\n"
             "# Body\n"
             "name: systematic-review\n"
