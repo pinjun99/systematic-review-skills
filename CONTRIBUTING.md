@@ -40,7 +40,7 @@ cd systematic-review-skills
 python3 .agents/run_tests.py
 ```
 
-The command runs every `test_*.py` module under `.agents/`.
+The command runs every `test_*.py` module under `.agents/`. Pass name filters to run only a subset, e.g. `python3 .agents/run_tests.py prisma_flow install` runs the test files whose names contain either string. An unmatched filter is an error.
 
 ## Changing a skill
 

@@ -15,9 +15,23 @@ def discover_python_tests() -> List[Path]:
     return sorted(AGENTS_ROOT.rglob("test_*.py"))
 
 
-def discover_node_tests() -> List[Path]:
-    matches = []
-    return sorted(set(matches))
+def select_tests(filters: Sequence[str]) -> List[Path]:
+    """Return test files whose name contains any of the given filters.
+
+    An empty filter list means every discovered test. A filter that matches
+    nothing is an error so a typo cannot silently reduce coverage.
+    """
+    tests = discover_python_tests()
+    if not filters:
+        return tests
+
+    selected = set()
+    for name_filter in filters:
+        matches = [test for test in tests if name_filter in test.name]
+        if not matches:
+            raise SystemExit(f"No test files match filter: {name_filter}")
+        selected.update(matches)
+    return sorted(selected)
 
 
 def run(command: Sequence[str]) -> None:
@@ -29,21 +43,14 @@ def run(command: Sequence[str]) -> None:
 
 
 def main() -> None:
-    python_tests = discover_python_tests()
-    node_tests = discover_node_tests()
-    if not python_tests and not node_tests:
+    tests = select_tests(sys.argv[1:])
+    if not tests:
         raise SystemExit("No tests discovered under .agents")
 
-    for test_file in python_tests:
+    for test_file in tests:
         run([sys.executable, str(test_file)])
-    for test_file in node_tests:
-        run(["node", "--test", str(test_file)])
 
-    print(
-        "REGRESSION_OK "
-        f"python_files={len(python_tests)} node_files={len(node_tests)}",
-        flush=True,
-    )
+    print(f"REGRESSION_OK python_files={len(tests)}", flush=True)
 
 
 if __name__ == "__main__":

@@ -139,6 +139,10 @@ From the source checkout, run the tests after changing the collection
 python3 .agents/run_tests.py
 ```
 
+To run only the test files whose names match a filter, pass one or more
+strings, e.g. `python3 .agents/run_tests.py prisma_flow install`. An unmatched
+filter fails with a clear message instead of silently running nothing.
+
 See the [CLI reference](docs/validators.md) for individual commands.
 
 ## How the workflow is organized
