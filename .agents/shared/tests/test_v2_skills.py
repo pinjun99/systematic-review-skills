@@ -77,6 +77,29 @@ class SkillStructureTests(unittest.TestCase):
             text = metadata.read_text(encoding="utf-8")
             self.assertIn("default_prompt:", text)
 
+    def test_skill_frontmatter_name_matches_folder(self):
+        for path in SKILL_FILES:
+            text = path.read_text(encoding="utf-8")
+            match = re.search(r"^name:\s*(\S+)\s*$", text, re.MULTILINE)
+            self.assertIsNotNone(match, path)
+            self.assertEqual(path.parent.name, match.group(1), path)
+
+    def test_default_prompt_names_its_own_skill(self):
+        for path in SKILL_FILES:
+            metadata = path.parent / "agents" / "openai.yaml"
+            text = metadata.read_text(encoding="utf-8")
+            folder = path.parent.name
+            for key in ("display_name", "short_description", "default_prompt"):
+                match = re.search(rf'^\s*{key}:\s*"(.*)"\s*$', text, re.MULTILINE)
+                self.assertIsNotNone(match, f"{key} in {metadata}")
+                self.assertTrue(match.group(1).strip(), f"{key} in {metadata}")
+            prompt = re.search(r'^\s*default_prompt:\s*"(.*)"\s*$', text, re.MULTILINE).group(1)
+            self.assertRegex(
+                prompt,
+                rf"\$" + re.escape(folder) + r"(?![A-Za-z0-9_-])",
+                metadata,
+            )
+
 
 if __name__ == "__main__":
     unittest.main()
