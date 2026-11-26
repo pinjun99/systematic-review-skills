@@ -25,6 +25,15 @@ SKILLS = ROOT / ".agents" / "skills"
 SKILL_FILES = sorted(SKILLS.glob("systematic-review*/SKILL.md"))
 
 
+def frontmatter_name(text: str) -> str | None:
+    """Return the name from the opening YAML frontmatter block, if present."""
+    if not text.startswith("---\n"):
+        return None
+    frontmatter = text.split("\n---", 1)[0]
+    match = re.search(r"^name:\s*(\S+)\s*$", frontmatter, re.MULTILINE)
+    return match.group(1) if match else None
+
+
 class SkillStructureTests(unittest.TestCase):
     def test_coordinator_and_fourteen_phase_skills_exist(self):
         self.assertEqual(15, len(SKILL_FILES))
@@ -79,23 +88,45 @@ class SkillStructureTests(unittest.TestCase):
 
     def test_skill_frontmatter_name_matches_folder(self):
         for path in SKILL_FILES:
-            text = path.read_text(encoding="utf-8")
-            match = re.search(r"^name:\s*(\S+)\s*$", text, re.MULTILINE)
-            self.assertIsNotNone(match, path)
-            self.assertEqual(path.parent.name, match.group(1), path)
+            name = frontmatter_name(path.read_text(encoding="utf-8"))
+            self.assertIsNotNone(name, path)
+            self.assertEqual(path.parent.name, name, path)
+
+    def test_frontmatter_name_does_not_read_the_body(self):
+        text = (
+            "---\n"
+            "description: no name here\n"
+            "---\n"
+            "\n"
+            "# Body\n"
+            "name: systematic-review-protocol\n"
+        )
+        self.assertIsNone(frontmatter_name(text))
+
+    def test_frontmatter_name_with_trailing_comment_is_not_accepted(self):
+        text = (
+            "---\n"
+            "name: systematic-review-protocol # renamed\n"
+            "---\n"
+            "\n"
+            "# Body\n"
+            "name: systematic-review\n"
+        )
+        self.assertIsNone(frontmatter_name(text))
 
     def test_default_prompt_names_its_own_skill(self):
         for path in SKILL_FILES:
             metadata = path.parent / "agents" / "openai.yaml"
             text = metadata.read_text(encoding="utf-8")
             folder = path.parent.name
+            values = {}
             for key in ("display_name", "short_description", "default_prompt"):
                 match = re.search(rf'^\s*{key}:\s*"(.*)"\s*$', text, re.MULTILINE)
                 self.assertIsNotNone(match, f"{key} in {metadata}")
-                self.assertTrue(match.group(1).strip(), f"{key} in {metadata}")
-            prompt = re.search(r'^\s*default_prompt:\s*"(.*)"\s*$', text, re.MULTILINE).group(1)
+                values[key] = match.group(1)
+                self.assertTrue(values[key].strip(), f"{key} in {metadata}")
             self.assertRegex(
-                prompt,
+                values["default_prompt"],
                 rf"\$" + re.escape(folder) + r"(?![A-Za-z0-9_-])",
                 metadata,
             )
