@@ -35,12 +35,17 @@ def cited_version():
     return match.group(1)
 
 
-def changelog_headings_and_references():
-    """Return the release headings and release-label link references."""
-    text = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+def changelog_headings_and_references(text=None):
+    """Return the release headings and release-label link references.
+
+    A reference counts by its label whatever follows the URL, so a
+    definition with a title still counts as a definition of that label.
+    """
+    if text is None:
+        text = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
     headings = re.findall(r"^## \[([^\]]+)\]", text, re.M)
     references = re.findall(
-        rf"^\[({RELEASE_LABEL})\]:\s*(\S+)\s*$", text, re.M
+        rf"^ {{0,3}}\[({RELEASE_LABEL})\]:[ \t]*<?([^\s>]+)>?", text, re.M
     )
     return headings, references
 
@@ -100,7 +105,9 @@ class ReleaseVersionTests(unittest.TestCase):
             "released headings are not newest first",
         )
 
-        urls = dict(references)
+        urls = {}
+        for label, url in references:
+            urls.setdefault(label, url)  # Markdown uses the first definition
         expected = {"Unreleased": f"{REPO_URL}/compare/v{versions[0]}...HEAD"}
         for newer, older in pairwise(versions):
             expected[newer] = f"{REPO_URL}/compare/v{older}...v{newer}"
@@ -108,6 +115,21 @@ class ReleaseVersionTests(unittest.TestCase):
         for label, url in expected.items():
             with self.subTest(reference=label):
                 self.assertEqual(urls.get(label), url)
+
+    def test_titled_reference_counts_as_a_definition(self):
+        text = (
+            "## [0.3.0] - 2026-01-01\n\n"
+            '[0.3.0]: https://example.org/wrong "Release"\n'
+            f"[0.3.0]: {REPO_URL}/releases/tag/v0.3.0\n"
+        )
+        _, references = changelog_headings_and_references(text)
+        self.assertEqual(
+            references,
+            [
+                ("0.3.0", "https://example.org/wrong"),
+                ("0.3.0", f"{REPO_URL}/releases/tag/v0.3.0"),
+            ],
+        )
 
     def test_newest_changelog_release_matches_citation(self):
         headings, _ = changelog_headings_and_references()
