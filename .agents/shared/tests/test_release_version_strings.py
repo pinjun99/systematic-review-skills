@@ -13,14 +13,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Keep every published version string in step with CITATION.cff."""
+"""Keep published version strings and CHANGELOG links in step."""
 
+from itertools import pairwise
 from pathlib import Path
 import re
 import unittest
 
 
 ROOT = Path(__file__).resolve().parents[3]
+REPO_URL = "https://github.com/pinjun99/systematic-review-skills"
+RELEASE_LABEL = r"Unreleased|[0-9]+\.[0-9]+\.[0-9]+"
 
 
 def cited_version():
@@ -30,6 +33,20 @@ def cited_version():
     if match is None:
         raise AssertionError("CITATION.cff declares no X.Y.Z version")
     return match.group(1)
+
+
+def changelog_headings_and_references():
+    """Return the release headings and release-label link references."""
+    text = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+    headings = re.findall(r"^## \[([^\]]+)\]", text, re.M)
+    references = re.findall(
+        rf"^\[({RELEASE_LABEL})\]:\s*(\S+)\s*$", text, re.M
+    )
+    return headings, references
+
+
+def version_key(label):
+    return tuple(int(part) for part in label.split("."))
 
 
 class ReleaseVersionTests(unittest.TestCase):
@@ -49,6 +66,54 @@ class ReleaseVersionTests(unittest.TestCase):
                     re.search(pattern, text, re.M),
                     f"published text drifted from CITATION.cff version {version}",
                 )
+
+    def test_changelog_headings_have_matching_links(self):
+        headings, references = changelog_headings_and_references()
+        self.assertTrue(headings, "CHANGELOG.md has no release headings")
+        self.assertEqual(
+            len(headings), len(set(headings)), "duplicate CHANGELOG headings"
+        )
+        for label in headings:
+            with self.subTest(heading=label):
+                self.assertRegex(label, rf"^(?:{RELEASE_LABEL})$")
+
+        labels = [label for label, _ in references]
+        for label in headings:
+            with self.subTest(heading=label):
+                self.assertEqual(
+                    labels.count(label),
+                    1,
+                    f"## [{label}] needs exactly one [{label}]: reference",
+                )
+        for label in labels:
+            with self.subTest(reference=label):
+                self.assertIn(
+                    label, headings, f"[{label}]: reference has no heading"
+                )
+
+        self.assertEqual(headings[0], "Unreleased")
+        versions = headings[1:]
+        self.assertTrue(versions, "CHANGELOG.md has no released version")
+        self.assertEqual(
+            versions,
+            sorted(versions, key=version_key, reverse=True),
+            "released headings are not newest first",
+        )
+
+        urls = dict(references)
+        expected = {"Unreleased": f"{REPO_URL}/compare/v{versions[0]}...HEAD"}
+        for newer, older in pairwise(versions):
+            expected[newer] = f"{REPO_URL}/compare/v{older}...v{newer}"
+        expected[versions[-1]] = f"{REPO_URL}/releases/tag/v{versions[-1]}"
+        for label, url in expected.items():
+            with self.subTest(reference=label):
+                self.assertEqual(urls.get(label), url)
+
+    def test_newest_changelog_release_matches_citation(self):
+        headings, _ = changelog_headings_and_references()
+        released = [label for label in headings if label != "Unreleased"]
+        self.assertTrue(released, "CHANGELOG.md has no released version")
+        self.assertEqual(released[0], cited_version())
 
 
 if __name__ == "__main__":
