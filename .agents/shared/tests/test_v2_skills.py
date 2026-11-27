@@ -25,6 +25,27 @@ SKILLS = ROOT / ".agents" / "skills"
 SKILL_FILES = sorted(SKILLS.glob("systematic-review*/SKILL.md"))
 
 
+def frontmatter_name(text: str) -> str | None:
+    """Return the name from a closed opening YAML frontmatter block, if present.
+
+    A closing delimiter must be exactly ``---`` on its own line; a line such as
+    ``----`` is not a closer. A whitespace-separated inline YAML comment after
+    the value is allowed, but a name written only in the body is not.
+    """
+    if not text.startswith("---\n"):
+        return None
+    lines = text.split("\n")
+    closing = next(
+        (index for index, line in enumerate(lines[1:], start=1) if line.rstrip("\r") == "---"),
+        None,
+    )
+    if closing is None:
+        return None
+    frontmatter = "\n".join(lines[1:closing])
+    match = re.search(r"^name:\s*([^\s#]+)(?:\s+#[^\n]*)?\s*$", frontmatter, re.MULTILINE)
+    return match.group(1) if match else None
+
+
 class SkillStructureTests(unittest.TestCase):
     def test_coordinator_and_fourteen_phase_skills_exist(self):
         self.assertEqual(15, len(SKILL_FILES))
@@ -76,6 +97,72 @@ class SkillStructureTests(unittest.TestCase):
             self.assertTrue(metadata.is_file(), metadata)
             text = metadata.read_text(encoding="utf-8")
             self.assertIn("default_prompt:", text)
+
+    def test_skill_frontmatter_name_matches_folder(self):
+        for path in SKILL_FILES:
+            name = frontmatter_name(path.read_text(encoding="utf-8"))
+            self.assertIsNotNone(name, path)
+            self.assertEqual(path.parent.name, name, path)
+
+    def test_frontmatter_name_does_not_read_the_body(self):
+        text = (
+            "---\n"
+            "description: no name here\n"
+            "---\n"
+            "\n"
+            "# Body\n"
+            "name: systematic-review-protocol\n"
+        )
+        self.assertIsNone(frontmatter_name(text))
+
+    def test_frontmatter_name_with_inline_comment_wins_over_body(self):
+        text = (
+            "---\n"
+            "name: systematic-review-protocol # renamed\n"
+            "---\n"
+            "\n"
+            "# Body\n"
+            "name: systematic-review\n"
+        )
+        self.assertEqual("systematic-review-protocol", frontmatter_name(text))
+
+    def test_frontmatter_name_requires_a_closing_delimiter(self):
+        text = (
+            "---\n"
+            "name: systematic-review-protocol\n"
+            "\n"
+            "# Body\n"
+            "name: systematic-review\n"
+        )
+        self.assertIsNone(frontmatter_name(text))
+
+    def test_four_dashes_do_not_close_frontmatter(self):
+        text = (
+            "---\n"
+            "name: systematic-review-protocol\n"
+            "----\n"
+            "\n"
+            "# Body\n"
+            "name: systematic-review\n"
+        )
+        self.assertIsNone(frontmatter_name(text))
+
+    def test_default_prompt_names_its_own_skill(self):
+        for path in SKILL_FILES:
+            metadata = path.parent / "agents" / "openai.yaml"
+            text = metadata.read_text(encoding="utf-8")
+            folder = path.parent.name
+            values = {}
+            for key in ("display_name", "short_description", "default_prompt"):
+                match = re.search(rf'^\s*{key}:\s*"(.*)"\s*$', text, re.MULTILINE)
+                self.assertIsNotNone(match, f"{key} in {metadata}")
+                values[key] = match.group(1)
+                self.assertTrue(values[key].strip(), f"{key} in {metadata}")
+            self.assertRegex(
+                values["default_prompt"],
+                rf"\$" + re.escape(folder) + r"(?![A-Za-z0-9_-])",
+                metadata,
+            )
 
 
 if __name__ == "__main__":
