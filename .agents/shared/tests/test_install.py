@@ -86,7 +86,7 @@ class InstallTests(unittest.TestCase):
         self.assertFalse(list(self.project.rglob("__pycache__")))
         self.assertFalse(list(self.project.rglob("*.pyc")))
         manifest = self.manifest()
-        self.assertEqual("0.3.0", manifest["version"])
+        self.assertEqual("0.3.1", manifest["version"])
         installed = self.snapshot()
         self.assertEqual(set(installed) - {MANIFEST}, set(manifest["files"]))
         for relative, sha256 in manifest["files"].items():
@@ -156,7 +156,7 @@ class InstallTests(unittest.TestCase):
         runtime = source / RUNTIME
         runtime.write_bytes(runtime.read_bytes() + b"\n# New release\n")
         citation = source / "CITATION.cff"
-        citation.write_text(citation.read_text().replace("version: 0.3.0", "version: 0.4.0"))
+        citation.write_text(citation.read_text().replace("version: 0.3.1", "version: 0.4.0"))
         obsolete.unlink()
         unrelated = self.project / ".agents/shared/local.txt"
         unrelated.write_text("keep me", encoding="utf-8")
