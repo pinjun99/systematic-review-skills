@@ -24,6 +24,12 @@ import unittest
 ROOT = Path(__file__).resolve().parents[3]
 REPO_URL = "https://github.com/pinjun99/systematic-review-skills"
 RELEASE_LABEL = r"Unreleased|[0-9]+\.[0-9]+\.[0-9]+"
+RELEASE_REFERENCE = re.compile(
+    rf"^ {{0,3}}\[(?P<label>{RELEASE_LABEL})\]:[ \t]*"
+    r"(?:<(?P<bracketed>[^\s<>]+)>|(?P<bare>[^\s<>]+))"
+    r"""(?:[ \t]+(?:"[^"\n]*"|'[^'\n]*'))?[ \t]*$""",
+    re.M,
+)
 
 
 def cited_version():
@@ -38,15 +44,19 @@ def cited_version():
 def changelog_headings_and_references(text=None):
     """Return the release headings and release-label link references.
 
-    A reference counts by its label whatever follows the URL, so a
-    definition with a title still counts as a definition of that label.
+    A reference must fill its whole line: the label, then a bare or
+    <bracketed> URL, then optionally a "double" or 'single' quoted title.
+    A titled definition still counts as a definition of its label, and a
+    line with other trailing text is not a reference at all, as in
+    Markdown.
     """
     if text is None:
         text = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
     headings = re.findall(r"^## \[([^\]]+)\]", text, re.M)
-    references = re.findall(
-        rf"^ {{0,3}}\[({RELEASE_LABEL})\]:[ \t]*<?([^\s>]+)>?", text, re.M
-    )
+    references = [
+        (match["label"], match["bracketed"] or match["bare"])
+        for match in RELEASE_REFERENCE.finditer(text)
+    ]
     return headings, references
 
 
@@ -130,6 +140,14 @@ class ReleaseVersionTests(unittest.TestCase):
                 ("0.3.0", f"{REPO_URL}/releases/tag/v0.3.0"),
             ],
         )
+
+    def test_trailing_unquoted_text_is_not_a_reference(self):
+        text = (
+            "## [0.3.0] - 2026-01-01\n\n"
+            f"[0.3.0]: {REPO_URL}/compare/v0.2.0...v0.3.0 broken tail\n"
+        )
+        _, references = changelog_headings_and_references(text)
+        self.assertEqual(references, [])
 
     def test_newest_changelog_release_matches_citation(self):
         headings, _ = changelog_headings_and_references()
