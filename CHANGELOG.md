@@ -7,12 +7,23 @@ and this project uses [semantic versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-11-27
+
 ### Added
 
 - `--uninstall` on `.agents/install.py` removes a previous install from its
   manifest, keeping edited files unless `--force` is given, leaving unrelated
   files alone, and deleting empty installer directories. `--dry-run` prints
   the plan without changing anything (#21).
+- A test that fails when published version strings in the README or user
+  manual drift from `CITATION.cff`, thanks @bfs2021 (#28).
+- A test that fails when a skill's name or default prompt drifts from its
+  folder and skill file, thanks @fadiuniv1 (#35).
+
+### Changed
+
+- `python3 .agents/run_tests.py` can now run a filtered subset of the
+  suite, thanks @fadiuniv1 (#36).
 
 ## [0.3.0] - 2026-11-18
 
@@ -102,7 +113,8 @@ First public release.
 - This release replaces the previous private licence. Public terms are the
   Apache License, Version 2.0. Copyright 2026 Ooi Pin Jun.
 
-[Unreleased]: https://github.com/pinjun99/systematic-review-skills/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/pinjun99/systematic-review-skills/compare/v0.3.1...HEAD
+[0.3.1]: https://github.com/pinjun99/systematic-review-skills/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/pinjun99/systematic-review-skills/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/pinjun99/systematic-review-skills/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/pinjun99/systematic-review-skills/releases/tag/v0.1.0
