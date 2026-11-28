@@ -25,9 +25,9 @@ ROOT = Path(__file__).resolve().parents[3]
 REPO_URL = "https://github.com/pinjun99/systematic-review-skills"
 RELEASE_LABEL = r"Unreleased|[0-9]+\.[0-9]+\.[0-9]+"
 RELEASE_REFERENCE = re.compile(
-    rf"^ {{0,3}}\[(?P<label>{RELEASE_LABEL})\]:[ \t]*"
+    rf"^ {{0,3}}\[(?P<label>(?i:{RELEASE_LABEL}))\]:[ \t]*"
     r"(?:<(?P<bracketed>[^\s<>]+)>|(?P<bare>[^\s<>]+))"
-    r"""(?:[ \t]+(?:"[^"\n]*"|'[^'\n]*'))?[ \t]*$""",
+    r"""(?:[ \t]+(?:"[^"\n]*"|'[^'\n]*'|\([^()\n]*\)))?[ \t]*$""",
     re.M,
 )
 
@@ -45,16 +45,21 @@ def changelog_headings_and_references(text=None):
     """Return the release headings and release-label link references.
 
     A reference must fill its whole line: the label, then a bare or
-    <bracketed> URL, then optionally a "double" or 'single' quoted title.
-    A titled definition still counts as a definition of its label, and a
-    line with other trailing text is not a reference at all, as in
-    Markdown.
+    <bracketed> URL, then optionally a "double", 'single' or (parenthesized)
+    title. A titled definition still counts as a definition of its label,
+    and a line with other trailing text is not a reference at all, as in
+    Markdown. Labels match case-insensitively, as in Markdown, so each
+    reference label is returned in its heading's spelling when one exists.
     """
     if text is None:
         text = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
     headings = re.findall(r"^## \[([^\]]+)\]", text, re.M)
+    spelling = {label.casefold(): label for label in headings}
     references = [
-        (match["label"], match["bracketed"] or match["bare"])
+        (
+            spelling.get(match["label"].casefold(), match["label"]),
+            match["bracketed"] or match["bare"],
+        )
         for match in RELEASE_REFERENCE.finditer(text)
     ]
     return headings, references
@@ -148,6 +153,33 @@ class ReleaseVersionTests(unittest.TestCase):
         )
         _, references = changelog_headings_and_references(text)
         self.assertEqual(references, [])
+
+    def test_parenthesized_title_counts_as_a_definition(self):
+        text = (
+            "## [0.3.0] - 2026-01-01\n\n"
+            "[0.3.0]: /wrong (Release)\n"
+            f"[0.3.0]: {REPO_URL}/releases/tag/v0.3.0\n"
+        )
+        _, references = changelog_headings_and_references(text)
+        self.assertEqual(
+            references,
+            [("0.3.0", "/wrong"), ("0.3.0", f"{REPO_URL}/releases/tag/v0.3.0")],
+        )
+
+    def test_label_in_another_case_counts_as_a_definition(self):
+        text = (
+            "## [Unreleased]\n\n"
+            "[unreleased]: /wrong\n"
+            f"[Unreleased]: {REPO_URL}/compare/v0.3.1...HEAD\n"
+        )
+        _, references = changelog_headings_and_references(text)
+        self.assertEqual(
+            references,
+            [
+                ("Unreleased", "/wrong"),
+                ("Unreleased", f"{REPO_URL}/compare/v0.3.1...HEAD"),
+            ],
+        )
 
     def test_newest_changelog_release_matches_citation(self):
         headings, _ = changelog_headings_and_references()
